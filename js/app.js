@@ -1,6 +1,6 @@
 /**
- * AcetaView — Dynamic 3D Vertical & Horizontal Rotation Limit Engine
- * Expands 3D Vertical Tilt capacity to 140+ frames for complete full-range scrolling.
+ * AcetaView — Professional 3-Tier Hybrid Buffer Engine
+ * Combining ±15 Sliding Window, Background Key-Frame Preloading, and Smart RAM Purging.
  */
 
 // 1. CASES DATA
@@ -37,16 +37,15 @@ function getCandidateUrls(folderName, plane, i) {
   ];
 }
 
-// 2. SMART ON-DEMAND IMAGE SEQUENCE ENGINE (FULL RANGE AUTO-DETECT)
+// 2. 3-TIER HYBRID BUFFER IMAGE SEQUENCE ENGINE
 class ImageSequenceManager {
   constructor() {
     this.cache = {};
     this.available = {};
     this.detectedCounts = {};
-    this.failedCount = {};
   }
 
-  // Release JavaScript & GPU Memory when switching cases
+  // Release RAM memory when switching cases
   clearCache() {
     Object.keys(this.cache).forEach(key => {
       if (Array.isArray(this.cache[key])) {
@@ -63,7 +62,6 @@ class ImageSequenceManager {
     this.cache = {};
     this.available = {};
     this.detectedCounts = {};
-    this.failedCount = {};
   }
 
   preloadCase(folderName, slicesObj) {
@@ -78,9 +76,9 @@ class ImageSequenceManager {
       this.cache[key] = [];
       this.detectedCounts[key] = targetCount;
 
-      // Preload initial ±10 frames around start and middle slices for instant response
+      // Tier 1: Immediate ±15 window around initial start and mid points
       const mid = Math.floor(targetCount / 2);
-      for (let offset = -10; offset <= 10; offset++) {
+      for (let offset = -15; offset <= 15; offset++) {
         if (mid + offset >= 1 && mid + offset <= targetCount) {
           this.loadSingleFrame(folderName, plane, mid + offset);
         }
@@ -88,6 +86,13 @@ class ImageSequenceManager {
           this.loadSingleFrame(folderName, plane, 1 + offset);
         }
       }
+
+      // Tier 2: Low-priority Background Key-Frame Preloader (every 15th frame)
+      setTimeout(() => {
+        for (let kf = 1; kf <= targetCount; kf += 15) {
+          this.loadSingleFrame(folderName, plane, kf);
+        }
+      }, 100);
     });
   }
 
@@ -160,9 +165,9 @@ class ImageSequenceManager {
       ctx.fillRect(0, 0, cW, cH);
       ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
-      // Smart ±10 frames window preloader for smooth continuous rotation
+      // Tier 1: Sliding Window ±15 frames around active position
       const maxCount = this.detectedCounts[key] || 140;
-      for (let k = -10; k <= 10; k++) {
+      for (let k = -15; k <= 15; k++) {
         if (k === 0) continue;
         const targetIdx = index + k;
         if (targetIdx >= 1 && targetIdx <= maxCount) {
@@ -182,8 +187,9 @@ class ImageSequenceManager {
     ctx.textBaseline = 'middle';
     ctx.fillText('Loading...', cW / 2, cH / 2);
 
+    // Trigger ±15 preloads while loading current frame
     const maxCount = this.detectedCounts[key] || 140;
-    for (let k = -10; k <= 10; k++) {
+    for (let k = -15; k <= 15; k++) {
       const targetIdx = index + k;
       if (targetIdx >= 1 && targetIdx <= maxCount) {
         this.loadSingleFrame(folderName, plane, targetIdx);
