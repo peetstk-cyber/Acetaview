@@ -1,6 +1,6 @@
 /**
- * AcetaView — Readable "Loading..." Status Overlay
- * Displays a clear, bright 18px "Loading..." text while image frames are preloading.
+ * AcetaView — Smart On-Demand & Memory Purging Engine for Vercel & iPad
+ * Prevents Vercel 429 rate limiting & iPad RAM crashes when switching cases.
  */
 
 // 1. CASES DATA
@@ -37,85 +37,135 @@ function getCandidateUrls(folderName, plane, i) {
   ];
 }
 
-// 2. UNIVERSAL IMAGE SEQUENCE ENGINE
+// 2. SMART ON-DEMAND IMAGE SEQUENCE ENGINE (RAM & VERCEL SAFE)
 class ImageSequenceManager {
   constructor() {
     this.cache = {};
     this.available = {};
     this.detectedCounts = {};
+    this.failedCount = {};
+  }
+
+  // Release JavaScript & GPU Memory when switching cases
+  clearCache() {
+    Object.keys(this.cache).forEach(key => {
+      if (Array.isArray(this.cache[key])) {
+        this.cache[key].forEach(img => {
+          if (img) {
+            img.onload = null;
+            img.onerror = null;
+            img.src = '';
+          }
+        });
+      }
+    });
+
+    this.cache = {};
+    this.available = {};
+    this.detectedCounts = {};
+    this.failedCount = {};
   }
 
   preloadCase(folderName, slicesObj) {
+    // 1. Instantly free RAM from previous case
+    this.clearCache();
+
     const planes = ['axial', 'sagittal', 'coronal', '3d_horizontal', '3d_vertical'];
     
     planes.forEach(plane => {
       const key = `${folderName}_${plane}`;
-      if (this.cache[key]) return;
+      const targetCount = (plane === '3d_horizontal') ? 72 : (plane === '3d_vertical') ? 36 : (slicesObj[plane] || 140);
+      
+      this.cache[key] = [];
+      this.detectedCounts[key] = targetCount;
 
-      const maxScan = 360;
-      const imgArray = [];
-      let maxValidIndex = 0;
+      // 2. Preload only initial middle & first frames on case open (Zero Request Spam)
+      const mid = Math.floor(targetCount / 2);
+      this.loadSingleFrame(folderName, plane, mid);
+      this.loadSingleFrame(folderName, plane, 1);
+    });
+  }
 
-      for (let i = 1; i <= maxScan; i++) {
-        const candidates = getCandidateUrls(folderName, plane, i);
-        const img = new Image();
-        let candidateIdx = 0;
+  loadSingleFrame(folderName, plane, index) {
+    if (index < 1) return null;
 
-        const tryNextCandidate = () => {
-          if (candidateIdx < candidates.length) {
-            img.src = candidates[candidateIdx++];
-          }
-        };
+    const key = `${folderName}_${plane}`;
+    if (!this.cache[key]) this.cache[key] = [];
+    
+    if (this.cache[key][index - 1] !== undefined) {
+      return this.cache[key][index - 1];
+    }
 
-        img.onload = () => {
-          if (i > maxValidIndex) {
-            maxValidIndex = i;
-            this.detectedCounts[key] = maxValidIndex;
-            this.available[key] = true;
+    const candidates = getCandidateUrls(folderName, plane, index);
+    const img = new Image();
+    let candidateIdx = 0;
 
-            if (plane === 'axial' || plane === 'sagittal' || plane === 'coronal') {
-              slicesObj[plane] = maxValidIndex;
-              window.updateSliderLimits(plane, maxValidIndex);
-            }
-          }
-        };
+    const tryNext = () => {
+      if (candidateIdx < candidates.length) {
+        img.src = candidates[candidateIdx++];
+      } else {
+        this.cache[key][index - 1] = null;
+      }
+    };
 
-        img.onerror = () => {
-          tryNextCandidate();
-        };
-
-        tryNextCandidate();
-        imgArray.push(img);
+    img.onload = () => {
+      this.available[key] = true;
+      if (index > (this.detectedCounts[key] || 0)) {
+        this.detectedCounts[key] = index;
+        if (plane === 'axial' || plane === 'sagittal' || plane === 'coronal') {
+          window.updateSliderLimits(plane, index);
+        }
       }
 
-      this.cache[key] = imgArray;
-    });
+      if (plane === 'axial' || plane === 'sagittal' || plane === 'coronal') {
+        window.renderAll2D();
+      } else {
+        window.render3D();
+      }
+    };
+
+    img.onerror = () => {
+      tryNext();
+    };
+
+    tryNext();
+    this.cache[key][index - 1] = img;
+    return img;
   }
 
   drawFrame(ctx, folderName, plane, index, cW, cH) {
     const key = `${folderName}_${plane}`;
-    const imgArray = this.cache[key];
-
-    if (this.available[key] && imgArray && imgArray[index - 1]) {
-      const img = imgArray[index - 1];
-      if (img.complete && img.naturalWidth > 0) {
-        const vW = img.naturalWidth;
-        const vH = img.naturalHeight;
-
-        const scale = Math.min(cW / vW, cH / vH);
-        const drawW = vW * scale;
-        const drawH = vH * scale;
-        const drawX = (cW - drawW) / 2;
-        const drawY = (cH - drawH) / 2;
-
-        ctx.fillStyle = '#05070c';
-        ctx.fillRect(0, 0, cW, cH);
-        ctx.drawImage(img, drawX, drawY, drawW, drawH);
-        return true;
-      }
+    
+    let img = this.cache[key] ? this.cache[key][index - 1] : null;
+    if (!img) {
+      img = this.loadSingleFrame(folderName, plane, index);
     }
 
-    // Display clear, bright 18px "Loading..." text overlay
+    if (img && img.complete && img.naturalWidth > 0) {
+      const vW = img.naturalWidth;
+      const vH = img.naturalHeight;
+
+      const scale = Math.min(cW / vW, cH / vH);
+      const drawW = vW * scale;
+      const drawH = vH * scale;
+      const drawX = (cW - drawW) / 2;
+      const drawY = (cH - drawH) / 2;
+
+      ctx.fillStyle = '#05070c';
+      ctx.fillRect(0, 0, cW, cH);
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+      // Smart Adjacent Frame Preloader (+1, -1, +2, -2) for 60FPS smooth scrubbing
+      const maxCount = this.detectedCounts[key] || 140;
+      if (index + 1 <= maxCount) this.loadSingleFrame(folderName, plane, index + 1);
+      if (index - 1 >= 1) this.loadSingleFrame(folderName, plane, index - 1);
+      if (index + 2 <= maxCount) this.loadSingleFrame(folderName, plane, index + 2);
+      if (index - 2 >= 1) this.loadSingleFrame(folderName, plane, index - 2);
+
+      return true;
+    }
+
+    // Display clear, bright 18px "Loading..." text overlay while frame is fetching
     ctx.fillStyle = '#05070c';
     ctx.fillRect(0, 0, cW, cH);
     ctx.font = '700 18px Inter, sans-serif';
@@ -161,7 +211,7 @@ class VideoStreamManager {
       v.muted = true;
       v.playsInline = true;
       v.webkitPlaysInline = true;
-      v.preload = 'auto';
+      v.preload = 'none'; // Save memory
 
       v.addEventListener('loadedmetadata', () => {
         this.loaded[key] = true;
@@ -196,7 +246,6 @@ class VideoStreamManager {
       this.isSeeking[type] = false;
       const v = this.videos[type];
       v.src = `./videos/${folderName}/${type}.mp4`;
-      v.load();
     });
   }
 
@@ -344,6 +393,7 @@ window.openCase = function(caseId) {
   const found = window.CASES_DATA.find(c => c.id === caseId);
   if (found) currentCaseObj = found;
 
+  // Clear memory & preload new case safely
   window.imageSequenceManager.preloadCase(currentCaseObj.folder, currentCaseObj.slices);
   window.videoStreamManager.loadCaseVideos(currentCaseObj.folder);
 
