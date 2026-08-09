@@ -1,20 +1,20 @@
 /**
- * AcetaView — Smart On-Demand & Memory Purging Engine for Vercel & iPad
- * Prevents Vercel 429 rate limiting & iPad RAM crashes when switching cases.
+ * AcetaView — Dynamic 3D Vertical & Horizontal Rotation Limit Engine
+ * Expands 3D Vertical Tilt capacity to 140+ frames for complete full-range scrolling.
  */
 
 // 1. CASES DATA
 window.CASES_DATA = [
-  { id: "case-01", caseNumber: 1, title: "Case 01", folder: "Case01", slices: { axial: 140, sagittal: 108, coronal: 110 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-02", caseNumber: 2, title: "Case 02", folder: "Case02", slices: { axial: 140, sagittal: 115, coronal: 125 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-03", caseNumber: 3, title: "Case 03", folder: "Case03", slices: { axial: 110, sagittal: 95, coronal: 105 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-04", caseNumber: 4, title: "Case 04", folder: "Case04", slices: { axial: 105, sagittal: 90, coronal: 100 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-05", caseNumber: 5, title: "Case 05", folder: "Case05", slices: { axial: 130, sagittal: 110, coronal: 120 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-06", caseNumber: 6, title: "Case 06", folder: "Case06", slices: { axial: 125, sagittal: 105, coronal: 115 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-07", caseNumber: 7, title: "Case 07", folder: "Case07", slices: { axial: 135, sagittal: 112, coronal: 122 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-08", caseNumber: 8, title: "Case 08", folder: "Case08", slices: { axial: 118, sagittal: 98, coronal: 108 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-09", caseNumber: 9, title: "Case 09", folder: "Case09", slices: { axial: 115, sagittal: 95, coronal: 105 }, views3d: { horizontal: 72, vertical: 36 } },
-  { id: "case-10", caseNumber: 10, title: "Case 10", folder: "Case10", slices: { axial: 145, sagittal: 120, coronal: 130 }, views3d: { horizontal: 72, vertical: 36 } }
+  { id: "case-01", caseNumber: 1, title: "Case 01", folder: "Case01", slices: { axial: 140, sagittal: 108, coronal: 110 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-02", caseNumber: 2, title: "Case 02", folder: "Case02", slices: { axial: 140, sagittal: 115, coronal: 125 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-03", caseNumber: 3, title: "Case 03", folder: "Case03", slices: { axial: 110, sagittal: 95, coronal: 105 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-04", caseNumber: 4, title: "Case 04", folder: "Case04", slices: { axial: 105, sagittal: 90, coronal: 100 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-05", caseNumber: 5, title: "Case 05", folder: "Case05", slices: { axial: 130, sagittal: 110, coronal: 120 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-06", caseNumber: 6, title: "Case 06", folder: "Case06", slices: { axial: 125, sagittal: 105, coronal: 115 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-07", caseNumber: 7, title: "Case 07", folder: "Case07", slices: { axial: 135, sagittal: 112, coronal: 122 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-08", caseNumber: 8, title: "Case 08", folder: "Case08", slices: { axial: 118, sagittal: 98, coronal: 108 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-09", caseNumber: 9, title: "Case 09", folder: "Case09", slices: { axial: 115, sagittal: 95, coronal: 105 }, views3d: { horizontal: 72, vertical: 140 } },
+  { id: "case-10", caseNumber: 10, title: "Case 10", folder: "Case10", slices: { axial: 145, sagittal: 120, coronal: 130 }, views3d: { horizontal: 72, vertical: 140 } }
 ];
 
 function getCandidateUrls(folderName, plane, i) {
@@ -37,7 +37,7 @@ function getCandidateUrls(folderName, plane, i) {
   ];
 }
 
-// 2. SMART ON-DEMAND IMAGE SEQUENCE ENGINE (RAM & VERCEL SAFE)
+// 2. SMART ON-DEMAND IMAGE SEQUENCE ENGINE (FULL RANGE AUTO-DETECT)
 class ImageSequenceManager {
   constructor() {
     this.cache = {};
@@ -67,22 +67,27 @@ class ImageSequenceManager {
   }
 
   preloadCase(folderName, slicesObj) {
-    // 1. Instantly free RAM from previous case
     this.clearCache();
 
     const planes = ['axial', 'sagittal', 'coronal', '3d_horizontal', '3d_vertical'];
     
     planes.forEach(plane => {
       const key = `${folderName}_${plane}`;
-      const targetCount = (plane === '3d_horizontal') ? 72 : (plane === '3d_vertical') ? 36 : (slicesObj[plane] || 140);
+      const targetCount = (plane === '3d_horizontal') ? 72 : (plane === '3d_vertical') ? 140 : (slicesObj[plane] || 140);
       
       this.cache[key] = [];
       this.detectedCounts[key] = targetCount;
 
-      // 2. Preload only initial middle & first frames on case open (Zero Request Spam)
+      // Preload initial ±10 frames around start and middle slices for instant response
       const mid = Math.floor(targetCount / 2);
-      this.loadSingleFrame(folderName, plane, mid);
-      this.loadSingleFrame(folderName, plane, 1);
+      for (let offset = -10; offset <= 10; offset++) {
+        if (mid + offset >= 1 && mid + offset <= targetCount) {
+          this.loadSingleFrame(folderName, plane, mid + offset);
+        }
+        if (1 + offset >= 1 && 1 + offset <= targetCount) {
+          this.loadSingleFrame(folderName, plane, 1 + offset);
+        }
+      }
     });
   }
 
@@ -155,12 +160,15 @@ class ImageSequenceManager {
       ctx.fillRect(0, 0, cW, cH);
       ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
-      // Smart Adjacent Frame Preloader (+1, -1, +2, -2) for 60FPS smooth scrubbing
+      // Smart ±10 frames window preloader for smooth continuous rotation
       const maxCount = this.detectedCounts[key] || 140;
-      if (index + 1 <= maxCount) this.loadSingleFrame(folderName, plane, index + 1);
-      if (index - 1 >= 1) this.loadSingleFrame(folderName, plane, index - 1);
-      if (index + 2 <= maxCount) this.loadSingleFrame(folderName, plane, index + 2);
-      if (index - 2 >= 1) this.loadSingleFrame(folderName, plane, index - 2);
+      for (let k = -10; k <= 10; k++) {
+        if (k === 0) continue;
+        const targetIdx = index + k;
+        if (targetIdx >= 1 && targetIdx <= maxCount) {
+          this.loadSingleFrame(folderName, plane, targetIdx);
+        }
+      }
 
       return true;
     }
@@ -173,6 +181,15 @@ class ImageSequenceManager {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Loading...', cW / 2, cH / 2);
+
+    const maxCount = this.detectedCounts[key] || 140;
+    for (let k = -10; k <= 10; k++) {
+      const targetIdx = index + k;
+      if (targetIdx >= 1 && targetIdx <= maxCount) {
+        this.loadSingleFrame(folderName, plane, targetIdx);
+      }
+    }
+
     return true;
   }
 }
@@ -211,7 +228,7 @@ class VideoStreamManager {
       v.muted = true;
       v.playsInline = true;
       v.webkitPlaysInline = true;
-      v.preload = 'none'; // Save memory
+      v.preload = 'none';
 
       v.addEventListener('loadedmetadata', () => {
         this.loaded[key] = true;
@@ -393,7 +410,6 @@ window.openCase = function(caseId) {
   const found = window.CASES_DATA.find(c => c.id === caseId);
   if (found) currentCaseObj = found;
 
-  // Clear memory & preload new case safely
   window.imageSequenceManager.preloadCase(currentCaseObj.folder, currentCaseObj.slices);
   window.videoStreamManager.loadCaseVideos(currentCaseObj.folder);
 
@@ -541,7 +557,7 @@ window.render3D = function() {
   const ratioH = Math.max(0, Math.min(0.9999, (rot3DState.horiz % 360) / 360));
   const frameH = Math.floor(ratioH * countH) + 1;
 
-  const countV = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_vertical`] || 36;
+  const countV = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_vertical`] || 140;
   const ratioV = Math.max(0, Math.min(0.9999, (rot3DState.vert % 360) / 360));
   const frameV = Math.floor(ratioV * countV) + 1;
 
