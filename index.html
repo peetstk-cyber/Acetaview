@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AcetaView">
+
+  <title>AcetaView — Acetabulum CT Imaging Platform</title>
+
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+  <!-- Unified Top Header Navigation Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <button id="btnBackHome" class="btn btn-secondary" onclick="showHome();">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+      </button>
+    </div>
+
+    <div class="header-center">
+      <select id="caseSelectDropdown" class="case-select-dropdown">
+        <option value="case-01">Case 01</option>
+        <option value="case-02">Case 02</option>
+        <option value="case-03">Case 03</option>
+        <option value="case-04">Case 04</option>
+        <option value="case-05">Case 05</option>
+        <option value="case-06">Case 06</option>
+        <option value="case-07">Case 07</option>
+        <option value="case-08">Case 08</option>
+        <option value="case-09">Case 09</option>
+        <option value="case-10">Case 10</option>
+      </select>
+    </div>
+
+    <div class="header-right">
+      <div class="mode-switch-group">
+        <button id="btnMode2D" class="btn btn-toggle active">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>2D CT Slices</span>
+        </button>
+        <button id="btnMode3D" class="btn btn-toggle">
+          <i class="fa-solid fa-cube"></i>
+          <span>3D Reconstruction</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- VIEW 1: Home Case Selector (10 Minimalist Case Cards) -->
+  <main id="homeView" class="view-section active">
+    <div class="home-hero">
+      <h1 class="home-title">Select Case</h1>
+    </div>
+
+    <!-- 10 Minimalist Case Cards Grid -->
+    <div id="casesGrid" class="cases-grid">
+      
+      <!-- Case 01 -->
+      <div class="case-card" onclick="openCase('case-01');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 01</h2>
+        </div>
+      </div>
+
+      <!-- Case 02 -->
+      <div class="case-card" onclick="openCase('case-02');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 02</h2>
+        </div>
+      </div>
+
+      <!-- Case 03 -->
+      <div class="case-card" onclick="openCase('case-03');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 03</h2>
+        </div>
+      </div>
+
+      <!-- Case 04 -->
+      <div class="case-card" onclick="openCase('case-04');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 04</h2>
+        </div>
+      </div>
+
+      <!-- Case 05 -->
+      <div class="case-card" onclick="openCase('case-05');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 05</h2>
+        </div>
+      </div>
+
+      <!-- Case 06 -->
+      <div class="case-card" onclick="openCase('case-06');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 06</h2>
+        </div>
+      </div>
+
+      <!-- Case 07 -->
+      <div class="case-card" onclick="openCase('case-07');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 07</h2>
+        </div>
+      </div>
+
+      <!-- Case 08 -->
+      <div class="case-card" onclick="openCase('case-08');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 08</h2>
+        </div>
+      </div>
+
+      <!-- Case 09 -->
+      <div class="case-card" onclick="openCase('case-09');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 09</h2>
+        </div>
+      </div>
+
+      <!-- Case 10 -->
+      <div class="case-card" onclick="openCase('case-10');">
+        <div class="case-card-inner">
+          <span class="case-num">CASE</span>
+          <h2 class="case-title">Case 10</h2>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- VIEW 2: Case Viewer Workspace -->
+  <div id="caseView" class="view-section" style="padding:0; max-width:100%; display:none;">
+    <div class="case-viewer-container">
+      
+      <!-- Viewer Workspace -->
+      <div class="viewer-workspace">
+        
+        <!-- 2D Viewport Grid (Axial, Sagittal, Coronal) -->
+        <div id="layout2D" class="view-2d-layout">
+          
+          <!-- Axial Viewport -->
+          <div class="viewport-box">
+            <div class="viewport-header">
+              <div class="viewport-title">
+                <i class="fa-solid fa-circle-dot"></i>
+                <span>AXIAL VIEW</span>
+              </div>
+              <span id="badgeAxial" class="slice-badge">0/0</span>
+            </div>
+            <div class="viewport-canvas-container">
+              <canvas id="canvasAxial" class="ct-canvas"></canvas>
+              <div class="touch-hint"><i class="fa-solid fa-hand-pointer"></i> Drag horizontally to scroll slices</div>
+            </div>
+            <div class="viewport-controls">
+              <input type="range" id="sliderAxial" class="slice-slider" min="1" max="100" value="1">
+            </div>
+          </div>
+
+          <!-- Sagittal Viewport -->
+          <div class="viewport-box">
+            <div class="viewport-header">
+              <div class="viewport-title">
+                <i class="fa-solid fa-circle-dot"></i>
+                <span>SAGITTAL VIEW</span>
+              </div>
+              <span id="badgeSagittal" class="slice-badge">0/0</span>
+            </div>
+            <div class="viewport-canvas-container">
+              <canvas id="canvasSagittal" class="ct-canvas"></canvas>
+              <div class="touch-hint"><i class="fa-solid fa-hand-pointer"></i> Drag horizontally to scroll slices</div>
+            </div>
+            <div class="viewport-controls">
+              <input type="range" id="sliderSagittal" class="slice-slider" min="1" max="100" value="1">
+            </div>
+          </div>
+
+          <!-- Coronal Viewport -->
+          <div class="viewport-box">
+            <div class="viewport-header">
+              <div class="viewport-title">
+                <i class="fa-solid fa-circle-dot"></i>
+                <span>CORONAL VIEW</span>
+              </div>
+              <span id="badgeCoronal" class="slice-badge">0/0</span>
+            </div>
+            <div class="viewport-canvas-container">
+              <canvas id="canvasCoronal" class="ct-canvas"></canvas>
+              <div class="touch-hint"><i class="fa-solid fa-hand-pointer"></i> Drag horizontally to scroll slices</div>
+            </div>
+            <div class="viewport-controls">
+              <input type="range" id="sliderCoronal" class="slice-slider" min="1" max="100" value="1">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 3D Reconstruction Dual Viewports (Horizontal & Vertical - Continuous Loop) -->
+        <div id="layout3D" class="view-3d-layout" style="display:none;">
+          <div class="view-3d-grid">
+            
+            <!-- 3D Horizontal Viewport -->
+            <div class="viewport-box">
+              <div class="viewport-header">
+                <div class="viewport-title">
+                  <i class="fa-solid fa-arrows-spin"></i>
+                  <span>3D HORIZONTAL ROTATION</span>
+                </div>
+              </div>
+              <div class="viewport-canvas-container">
+                <canvas id="canvas3DHoriz" class="ct-canvas"></canvas>
+                <div class="touch-hint"><i class="fa-solid fa-hand-pointer"></i> Drag horizontally to rotate 360°</div>
+              </div>
+              <div class="viewport-controls">
+                <input type="range" id="slider3DHoriz" class="slice-slider" min="0" max="360" value="0">
+              </div>
+            </div>
+
+            <!-- 3D Vertical Viewport -->
+            <div class="viewport-box">
+              <div class="viewport-header">
+                <div class="viewport-title">
+                  <i class="fa-solid fa-arrows-up-down"></i>
+                  <span>3D VERTICAL TILT</span>
+                </div>
+              </div>
+              <div class="viewport-canvas-container">
+                <canvas id="canvas3DVert" class="ct-canvas"></canvas>
+                <div class="touch-hint"><i class="fa-solid fa-hand-pointer"></i> Drag horizontally to tilt continuous</div>
+              </div>
+              <div class="viewport-controls">
+                <input type="range" id="slider3DVert" class="slice-slider" min="0" max="360" value="0">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Single Unified Script -->
+  <script src="./js/app.js"></script>
+
+</body>
+</html>
