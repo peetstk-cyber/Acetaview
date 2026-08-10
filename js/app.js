@@ -237,38 +237,71 @@ window.imageSequenceManager = new ImageSequenceManager();
 class TouchController {
   static bindScrub(canvas, onStepChange) {
     if (!canvas) return () => {};
-    let startVal = 0;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
     let isDragging = false;
+    let isHorizontalGesture = null;
     const pxPerStep = 4;
 
     const onStart = (e) => {
       isDragging = true;
+      isHorizontalGesture = null;
       const touch = e.touches ? e.touches[0] : e;
-      startVal = touch.clientX;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      lastX = touch.clientX;
     };
 
     const onMove = (e) => {
       if (!isDragging) return;
-      if (e.cancelable) e.preventDefault();
 
       const touch = e.touches ? e.touches[0] : e;
-      const curVal = touch.clientX;
-      const d = startVal - curVal;
+      const curX = touch.clientX;
+      const curY = touch.clientY;
+      const diffX = curX - startX;
+      const diffY = curY - startY;
 
+      // Smart Gesture Locking: detect direction on first 5px of movement
+      if (isHorizontalGesture === null) {
+        const absX = Math.abs(diffX);
+        const absY = Math.abs(diffY);
+        if (absX < 5 && absY < 5) return;
+
+        if (absY > absX) {
+          isHorizontalGesture = false; // Vertical swipe -> allow native page scrolling
+          return;
+        } else {
+          isHorizontalGesture = true;  // Horizontal swipe -> lock gesture to CT slice scrubbing
+        }
+      }
+
+      // If user is scrolling the page vertically, do not interfere
+      if (isHorizontalGesture === false) return;
+
+      // Horizontal swipe: scrub CT slices and prevent page horizontal panning
+      if (e.cancelable) e.preventDefault();
+
+      const d = lastX - curX;
       if (Math.abs(d) >= pxPerStep) {
         const steps = Math.trunc(d / pxPerStep);
         if (steps !== 0) {
           onStepChange(steps);
-          startVal = curVal;
+          lastX = curX;
         }
       }
     };
 
-    const onEnd = () => { isDragging = false; };
+    const onEnd = () => {
+      isDragging = false;
+      isHorizontalGesture = null;
+    };
 
-    canvas.addEventListener('touchstart', onStart, { passive: false });
+    canvas.addEventListener('touchstart', onStart, { passive: true });
     canvas.addEventListener('touchmove', onMove, { passive: false });
-    canvas.addEventListener('touchend', onEnd);
+    canvas.addEventListener('touchend', onEnd, { passive: true });
+    canvas.addEventListener('touchcancel', onEnd, { passive: true });
+
     canvas.addEventListener('mousedown', onStart);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onEnd);
@@ -278,6 +311,7 @@ class TouchController {
       canvas.removeEventListener('touchstart', onStart);
       canvas.removeEventListener('touchmove', onMove);
       canvas.removeEventListener('touchend', onEnd);
+      canvas.removeEventListener('touchcancel', onEnd);
       canvas.removeEventListener('mousedown', onStart);
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onEnd);

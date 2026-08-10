@@ -356,7 +356,7 @@ canvas.ct-canvas {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .viewport-controls {
