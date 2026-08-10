@@ -441,12 +441,12 @@ canvas.ct-canvas {
    RESPONSIVE — Mobile Phone (≤600px)
    ========================================== */
 @media (max-width: 600px) {
-  /* Header: shrink height, tighter padding */
+  /* Header: ultra-slim 40px height, minimal padding */
   .app-header {
-    height: 52px;
-    padding: 0 10px;
-    padding-left: max(10px, env(safe-area-inset-left));
-    padding-right: max(10px, env(safe-area-inset-right));
+    height: 40px;
+    padding: 0 6px;
+    padding-left: max(6px, env(safe-area-inset-left));
+    padding-right: max(6px, env(safe-area-inset-right));
   }
 
   /* Hide text labels on Home button — icon only */
@@ -454,8 +454,11 @@ canvas.ct-canvas {
     display: none;
   }
   .btn-secondary {
-    width: 38px;
+    width: 32px;
+    height: 30px;
     padding: 0;
+    font-size: 0.8rem;
+    border-radius: 6px;
     min-width: unset;
   }
 
@@ -464,58 +467,77 @@ canvas.ct-canvas {
     display: none;
   }
   .btn-toggle {
-    width: 38px;
+    width: 32px;
+    height: 30px;
     padding: 0;
+    font-size: 0.8rem;
+    border-radius: 6px;
     min-width: unset;
   }
 
-  /* Dropdown narrower */
+  /* Dropdown compact */
   .case-select-dropdown {
-    font-size: 0.9rem;
-    padding: 0 8px;
-    max-width: 110px;
+    height: 30px;
+    font-size: 0.78rem;
+    padding: 0 4px;
+    max-width: 95px;
+    border-radius: 6px;
   }
 
-  /* Prev/Next buttons smaller */
+  /* Prev/Next buttons compact */
   .btn-icon-nav {
-    width: 34px;
-    height: 34px;
-    font-size: 0.85rem;
+    width: 30px;
+    height: 30px;
+    font-size: 0.78rem;
+    border-radius: 6px;
   }
   .case-nav-group {
-    gap: 4px;
+    gap: 3px;
   }
 
   /* Account for notch/home indicator at bottom */
   .case-viewer-container {
-    height: calc(100dvh - 52px);
+    height: calc(100dvh - 40px);
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* Home view — tighter padding, smaller title */
-  #homeView {
-    padding: 16px;
+  .view-section {
+    height: calc(100dvh - 40px);
   }
-  .home-title {
-    font-size: 1.4rem;
+
+  /* Home view — tighter padding */
+  #homeView {
+    padding: 12px;
   }
   .cases-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
   }
   .case-card {
-    min-height: 100px;
-    padding: 18px 12px;
+    min-height: 80px;
+    padding: 14px 10px;
   }
   .case-title {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
 
-  /* Viewport header — compact */
+  /* Viewport header — ultra compact 20px height, small font */
   .viewport-header {
-    height: 32px;
-    font-size: 0.75rem;
-    padding: 0 10px;
+    height: 20px;
+    font-size: 0.65rem;
+    padding: 0 6px;
+  }
+  .viewport-title {
+    gap: 4px;
+  }
+  .viewport-title i {
+    font-size: 0.6rem;
+  }
+
+  /* Badge smaller */
+  .slice-badge {
+    font-size: 0.65rem;
+    min-width: 36px;
   }
 
   /* Slider bar thinner */
@@ -529,38 +551,36 @@ canvas.ct-canvas {
     padding: 0;
   }
 
-  /* Touch hint — smaller */
-  .touch-hint {
-    font-size: 0.68rem;
-    padding: 3px 10px;
-    bottom: 8px;
-  }
-
-  /* Badge smaller */
-  .slice-badge {
-    font-size: 0.75rem;
-    min-width: 48px;
-  }
-
-  /* 2D grid: 1 column stack, each viewport takes ~33% height */
+  /* 2D grid: 2 viewports fit per screen, scroll down to see the 3rd for MUCH larger images */
   .view-2d-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(3, 1fr);
-    gap: 4px;
+    grid-template-rows: none;
+    grid-auto-rows: calc((100dvh - 40px - 14px) / 2);
+    gap: 6px;
     padding: 4px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* 3D grid: 1 column stack */
+  /* 3D grid: 2 viewports fit per screen */
+  .view-3d-layout {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .view-3d-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(2, 1fr);
-    gap: 4px;
+    grid-template-rows: none;
+    grid-auto-rows: calc((100dvh - 40px - 14px) / 2);
+    gap: 6px;
     padding: 4px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Viewport border radius tighter on phone */
   .viewport-box {
-    border-radius: 10px;
+    border-radius: 8px;
   }
 }
 
@@ -569,15 +589,16 @@ canvas.ct-canvas {
    ========================================== */
 @media (max-width: 375px) {
   .case-select-dropdown {
-    max-width: 90px;
-    font-size: 0.8rem;
+    max-width: 85px;
+    font-size: 0.75rem;
+  }
+  .btn-icon-nav {
+    width: 28px;
+    height: 28px;
   }
   .cases-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-  }
-  .home-title {
-    font-size: 1.2rem;
   }
 }
 
