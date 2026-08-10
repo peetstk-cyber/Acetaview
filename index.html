@@ -161,7 +161,12 @@
                 <i class="fa-solid fa-circle-dot"></i>
                 <span>AXIAL VIEW</span>
               </div>
-              <span id="badgeAxial" class="slice-badge">0/0</span>
+              <div class="viewport-header-actions">
+                <span id="badgeAxial" class="slice-badge">0/0</span>
+                <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
+                  <i class="fa-solid fa-expand"></i>
+                </button>
+              </div>
             </div>
             <div class="viewport-canvas-container">
               <canvas id="canvasAxial" class="ct-canvas"></canvas>
@@ -178,7 +183,12 @@
                 <i class="fa-solid fa-circle-dot"></i>
                 <span>SAGITTAL VIEW</span>
               </div>
-              <span id="badgeSagittal" class="slice-badge">0/0</span>
+              <div class="viewport-header-actions">
+                <span id="badgeSagittal" class="slice-badge">0/0</span>
+                <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
+                  <i class="fa-solid fa-expand"></i>
+                </button>
+              </div>
             </div>
             <div class="viewport-canvas-container">
               <canvas id="canvasSagittal" class="ct-canvas"></canvas>
@@ -195,7 +205,12 @@
                 <i class="fa-solid fa-circle-dot"></i>
                 <span>CORONAL VIEW</span>
               </div>
-              <span id="badgeCoronal" class="slice-badge">0/0</span>
+              <div class="viewport-header-actions">
+                <span id="badgeCoronal" class="slice-badge">0/0</span>
+                <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
+                  <i class="fa-solid fa-expand"></i>
+                </button>
+              </div>
             </div>
             <div class="viewport-canvas-container">
               <canvas id="canvasCoronal" class="ct-canvas"></canvas>
@@ -218,6 +233,11 @@
                   <i class="fa-solid fa-arrows-spin"></i>
                   <span>3D HORIZONTAL ROTATION</span>
                 </div>
+                <div class="viewport-header-actions">
+                  <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
+                    <i class="fa-solid fa-expand"></i>
+                  </button>
+                </div>
               </div>
               <div class="viewport-canvas-container">
                 <canvas id="canvas3DHoriz" class="ct-canvas"></canvas>
@@ -233,6 +253,11 @@
                 <div class="viewport-title">
                   <i class="fa-solid fa-arrows-up-down"></i>
                   <span>3D VERTICAL TILT</span>
+                </div>
+                <div class="viewport-header-actions">
+                  <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
+                    <i class="fa-solid fa-expand"></i>
+                  </button>
                 </div>
               </div>
               <div class="viewport-canvas-container">

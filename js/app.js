@@ -242,7 +242,6 @@ class TouchController {
     let lastX = 0;
     let isDragging = false;
     let isHorizontalGesture = null;
-    const pxPerStep = 4;
 
     const onStart = (e) => {
       isDragging = true;
@@ -281,6 +280,11 @@ class TouchController {
 
       // Horizontal swipe: scrub CT slices and prevent page horizontal panning
       if (e.cancelable) e.preventDefault();
+
+      // Dynamic sensitivity: in Fullscreen mode use 14px/step for fine precision control (prevents fast jumping)
+      const box = canvas.closest('.viewport-box');
+      const isFullscreen = box ? box.classList.contains('fullscreen') : false;
+      const pxPerStep = isFullscreen ? 14 : 6;
 
       const d = lastX - curX;
       if (Math.abs(d) >= pxPerStep) {
@@ -443,6 +447,44 @@ window.switchMode = function(mode) {
     window.render3D();
   }
 };
+
+window.toggleFullscreen = function(btn) {
+  const box = btn.closest('.viewport-box');
+  if (!box) return;
+
+  const isFullscreen = box.classList.toggle('fullscreen');
+  const icon = btn.querySelector('i');
+
+  if (isFullscreen) {
+    if (icon) {
+      icon.classList.remove('fa-expand');
+      icon.classList.add('fa-compress');
+    }
+  } else {
+    if (icon) {
+      icon.classList.remove('fa-compress');
+      icon.classList.add('fa-expand');
+    }
+  }
+
+  window.renderAll2D();
+  window.render3D();
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.viewport-box.fullscreen').forEach(box => {
+      box.classList.remove('fullscreen');
+      const icon = box.querySelector('.btn-fullscreen i');
+      if (icon) {
+        icon.classList.remove('fa-compress');
+        icon.classList.add('fa-expand');
+      }
+    });
+    window.renderAll2D();
+    window.render3D();
+  }
+});
 
 window.renderAll2D = function() {
   cancelAnimationFrame(window._raf2D);
