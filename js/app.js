@@ -281,10 +281,10 @@ class TouchController {
       // Horizontal swipe: scrub CT slices and prevent page horizontal panning
       if (e.cancelable) e.preventDefault();
 
-      // Dynamic sensitivity: in Fullscreen mode use 14px/step for fine precision control (prevents fast jumping)
+      // Dynamic sensitivity: in Fullscreen mode use 12px/step for fine precision control (prevents fast jumping)
       const box = canvas.closest('.viewport-box');
       const isFullscreen = box ? box.classList.contains('fullscreen') : false;
-      const pxPerStep = isFullscreen ? 14 : 6;
+      const pxPerStep = isFullscreen ? 12 : 6;
 
       const d = lastX - curX;
       if (Math.abs(d) >= pxPerStep) {
@@ -364,6 +364,14 @@ window.openCase = function(caseId) {
   if (found) currentCaseObj = found;
 
   window.imageSequenceManager.preloadCase(currentCaseObj.folder, currentCaseObj.slices);
+
+  // Close any active fullscreen mode when changing cases
+  document.querySelectorAll('.viewport-box.fullscreen').forEach(box => {
+    box.classList.remove('fullscreen');
+    const icon = box.querySelector('.btn-fullscreen i');
+    if (icon) { icon.classList.remove('fa-compress'); icon.classList.add('fa-expand'); }
+  });
+  document.body.classList.remove('has-fullscreen');
 
   const homeView = document.getElementById('homeView');
   const caseView = document.getElementById('caseView');
@@ -453,6 +461,8 @@ window.toggleFullscreen = function(btn) {
   if (!box) return;
 
   const isFullscreen = box.classList.toggle('fullscreen');
+  document.body.classList.toggle('has-fullscreen', document.querySelectorAll('.viewport-box.fullscreen').length > 0);
+
   const icon = btn.querySelector('i');
 
   if (isFullscreen) {
@@ -481,6 +491,7 @@ document.addEventListener('keydown', (e) => {
         icon.classList.add('fa-expand');
       }
     });
+    document.body.classList.remove('has-fullscreen');
     window.renderAll2D();
     window.render3D();
   }
