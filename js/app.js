@@ -294,6 +294,17 @@ let rot3DState = { horiz: 0, vert: 0 };
 window._raf2D = null;
 window._raf3D = null;
 
+// Helper to update YouTube-style progress fill on slim range sliders
+window.updateSliderProgress = function(sliderId) {
+  const slider = document.getElementById(sliderId);
+  if (!slider) return;
+  const min = parseFloat(slider.min) || 0;
+  const max = parseFloat(slider.max) || 100;
+  const val = parseFloat(slider.value) || 0;
+  const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+  slider.style.setProperty('--progress', `${pct.toFixed(2)}%`);
+};
+
 window.updateSliderLimits = function(plane, maxCount) {
   let slider = null;
   if (plane === 'axial') slider = document.getElementById('sliderAxial');
@@ -425,6 +436,10 @@ window.renderAll2D = function() {
     document.getElementById('badgeAxial').textContent = `${slicesState.axial}/${countAxial}`;
     document.getElementById('badgeSagittal').textContent = `${slicesState.sagittal}/${countSag}`;
     document.getElementById('badgeCoronal').textContent = `${slicesState.coronal}/${countCor}`;
+
+    window.updateSliderProgress('sliderAxial');
+    window.updateSliderProgress('sliderSagittal');
+    window.updateSliderProgress('sliderCoronal');
   });
 };
 
@@ -450,6 +465,9 @@ window.render3D = function() {
 
     window.imageSequenceManager.drawFrame(ctxH, currentCaseObj.folder, '3d_horizontal', frameH, canvasH.width, canvasH.height);
     window.imageSequenceManager.drawFrame(ctxV, currentCaseObj.folder, '3d_vertical', frameV, canvasV.width, canvasV.height);
+
+    window.updateSliderProgress('slider3DHoriz');
+    window.updateSliderProgress('slider3DVert');
   });
 };
 window.resizeCanvas = function(canvas) {
