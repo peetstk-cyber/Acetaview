@@ -1,20 +1,20 @@
 /**
- * AcetaView — Professional 3-Tier Hybrid Buffer Engine
- * Combining ±15 Sliding Window, Background Key-Frame Preloading, and Smart RAM Purging.
+ * AcetaView — Exact Dynamic Frame Engine
+ * Explicitly sets 3D Vertical Tilt default to 108 frames matching Case 01 data.
  */
 
 // 1. CASES DATA
 window.CASES_DATA = [
-  { id: "case-01", caseNumber: 1, title: "Case 01", folder: "Case01", slices: { axial: 140, sagittal: 108, coronal: 110 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-02", caseNumber: 2, title: "Case 02", folder: "Case02", slices: { axial: 140, sagittal: 115, coronal: 125 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-03", caseNumber: 3, title: "Case 03", folder: "Case03", slices: { axial: 110, sagittal: 95, coronal: 105 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-04", caseNumber: 4, title: "Case 04", folder: "Case04", slices: { axial: 105, sagittal: 90, coronal: 100 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-05", caseNumber: 5, title: "Case 05", folder: "Case05", slices: { axial: 130, sagittal: 110, coronal: 120 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-06", caseNumber: 6, title: "Case 06", folder: "Case06", slices: { axial: 125, sagittal: 105, coronal: 115 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-07", caseNumber: 7, title: "Case 07", folder: "Case07", slices: { axial: 135, sagittal: 112, coronal: 122 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-08", caseNumber: 8, title: "Case 08", folder: "Case08", slices: { axial: 118, sagittal: 98, coronal: 108 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-09", caseNumber: 9, title: "Case 09", folder: "Case09", slices: { axial: 115, sagittal: 95, coronal: 105 }, views3d: { horizontal: 72, vertical: 140 } },
-  { id: "case-10", caseNumber: 10, title: "Case 10", folder: "Case10", slices: { axial: 145, sagittal: 120, coronal: 130 }, views3d: { horizontal: 72, vertical: 140 } }
+  { id: "case-01", caseNumber: 1, title: "Case 01", folder: "Case01", slices: { axial: 140, sagittal: 108, coronal: 110 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-02", caseNumber: 2, title: "Case 02", folder: "Case02", slices: { axial: 140, sagittal: 115, coronal: 125 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-03", caseNumber: 3, title: "Case 03", folder: "Case03", slices: { axial: 110, sagittal: 95, coronal: 105 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-04", caseNumber: 4, title: "Case 04", folder: "Case04", slices: { axial: 105, sagittal: 90, coronal: 100 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-05", caseNumber: 5, title: "Case 05", folder: "Case05", slices: { axial: 130, sagittal: 110, coronal: 120 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-06", caseNumber: 6, title: "Case 06", folder: "Case06", slices: { axial: 125, sagittal: 105, coronal: 115 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-07", caseNumber: 7, title: "Case 07", folder: "Case07", slices: { axial: 135, sagittal: 112, coronal: 122 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-08", caseNumber: 8, title: "Case 08", folder: "Case08", slices: { axial: 118, sagittal: 98, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-09", caseNumber: 9, title: "Case 09", folder: "Case09", slices: { axial: 115, sagittal: 95, coronal: 105 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-10", caseNumber: 10, title: "Case 10", folder: "Case10", slices: { axial: 145, sagittal: 120, coronal: 130 }, views3d: { horizontal: 92, vertical: 108 } }
 ];
 
 function getCandidateUrls(folderName, plane, i) {
@@ -37,7 +37,7 @@ function getCandidateUrls(folderName, plane, i) {
   ];
 }
 
-// 2. 3-TIER HYBRID BUFFER IMAGE SEQUENCE ENGINE
+// 2. UNIVERSAL IMAGE SEQUENCE ENGINE WITH EXACT FRAME DETECTION
 class ImageSequenceManager {
   constructor() {
     this.cache = {};
@@ -45,7 +45,6 @@ class ImageSequenceManager {
     this.detectedCounts = {};
   }
 
-  // Release RAM memory when switching cases
   clearCache() {
     Object.keys(this.cache).forEach(key => {
       if (Array.isArray(this.cache[key])) {
@@ -66,33 +65,67 @@ class ImageSequenceManager {
 
   preloadCase(folderName, slicesObj) {
     this.clearCache();
+    // FIX 3: Increment generation counter so stale scanNextBatch callbacks self-cancel
+    this.generation = (this.generation || 0) + 1;
+    const myGen = this.generation;
 
     const planes = ['axial', 'sagittal', 'coronal', '3d_horizontal', '3d_vertical'];
     
     planes.forEach(plane => {
       const key = `${folderName}_${plane}`;
-      const targetCount = (plane === '3d_horizontal') ? 72 : (plane === '3d_vertical') ? 140 : (slicesObj[plane] || 140);
-      
       this.cache[key] = [];
-      this.detectedCounts[key] = targetCount;
+      
+      const defaultCount = (plane === '3d_horizontal') ? 92 : (plane === '3d_vertical') ? 108 : (slicesObj[plane] || 108);
+      this.detectedCounts[key] = defaultCount;
 
-      // Tier 1: Immediate ±15 window around initial start and mid points
-      const mid = Math.floor(targetCount / 2);
-      for (let offset = -15; offset <= 15; offset++) {
-        if (mid + offset >= 1 && mid + offset <= targetCount) {
-          this.loadSingleFrame(folderName, plane, mid + offset);
-        }
-        if (1 + offset >= 1 && 1 + offset <= targetCount) {
-          this.loadSingleFrame(folderName, plane, 1 + offset);
-        }
+      // PHASE 1: Load only first 20 frames immediately on case open
+      // Avoids firing 360 simultaneous requests and triggering Vercel rate limiting
+      for (let i = 1; i <= 20; i++) {
+        this.loadSingleFrame(folderName, plane, i);
       }
 
-      // Tier 2: Low-priority Background Key-Frame Preloader (every 15th frame)
-      setTimeout(() => {
-        for (let kf = 1; kf <= targetCount; kf += 15) {
-          this.loadSingleFrame(folderName, plane, kf);
+      // PHASE 2: Background key-frame scan in small batches every 200ms
+      // Discovers actual frame count without spamming the CDN
+      // maxScan is capped per plane type — 3D horizontal has 92 frames, 3D vertical has 108 frames
+      const batchSize = 5;
+      const maxScan = (plane === '3d_horizontal') ? 110   // 92 frames + small buffer
+                    : (plane === '3d_vertical')   ? 120   // 108 frames + small buffer
+                    : 200;                                 // 2D planes: real data max ~145
+      let batchStart = 21;
+      let consecutiveMiss = 0; // Early-stop: track consecutive frames with no valid image
+
+      const scanNextBatch = () => {
+        // Stop if case changed
+        if (myGen !== this.generation) return;
+
+        const batchEnd = Math.min(batchStart + batchSize - 1, maxScan);
+        for (let i = batchStart; i <= batchEnd; i++) {
+          const img = this.loadSingleFrame(folderName, plane, i);
+
+          // Early-stop: monitor each frame's outcome after a short delay
+          // If the frame slot becomes null (all candidates failed) = miss
+          const frameIdx = i;
+          setTimeout(() => {
+            if (myGen !== this.generation) return;
+            const slot = this.cache[key] ? this.cache[key][frameIdx - 1] : undefined;
+            if (slot === null) {
+              consecutiveMiss++;
+            } else if (slot && slot.complete && slot.naturalWidth > 0) {
+              consecutiveMiss = 0; // reset on any successful frame
+            }
+          }, 2000); // wait 2s for slow connections before judging a frame as miss
         }
-      }, 100);
+
+        batchStart += batchSize;
+
+        // Stop scanning if: reached maxScan OR 3 consecutive misses detected
+        if (batchStart <= maxScan && consecutiveMiss < 3) {
+          setTimeout(scanNextBatch, 200);
+        }
+      };
+
+      // Start background scan after 500ms delay (after user sees initial frames)
+      setTimeout(scanNextBatch, 500);
     });
   }
 
@@ -120,17 +153,22 @@ class ImageSequenceManager {
 
     img.onload = () => {
       this.available[key] = true;
-      if (index > (this.detectedCounts[key] || 0)) {
+      const curMax = this.detectedCounts[key] || 0;
+      if (index > curMax) {
         this.detectedCounts[key] = index;
         if (plane === 'axial' || plane === 'sagittal' || plane === 'coronal') {
           window.updateSliderLimits(plane, index);
         }
       }
 
+      // Debounce via rAF: cancel any pending frame before scheduling a new one
+      // Prevents 25+ redundant canvas redraws per 200ms batch during background loading
       if (plane === 'axial' || plane === 'sagittal' || plane === 'coronal') {
-        window.renderAll2D();
+        cancelAnimationFrame(window._raf2D);
+        window._raf2D = requestAnimationFrame(() => window.renderAll2D());
       } else {
-        window.render3D();
+        cancelAnimationFrame(window._raf3D);
+        window._raf3D = requestAnimationFrame(() => window.render3D());
       }
     };
 
@@ -145,10 +183,13 @@ class ImageSequenceManager {
 
   drawFrame(ctx, folderName, plane, index, cW, cH) {
     const key = `${folderName}_${plane}`;
+    const maxCount = this.detectedCounts[key] || ((plane === '3d_vertical') ? 108 : (plane === '3d_horizontal') ? 92 : 100);
+
+    const safeIndex = Math.max(1, Math.min(maxCount, ((index - 1 + maxCount) % maxCount) + 1));
     
-    let img = this.cache[key] ? this.cache[key][index - 1] : null;
+    let img = this.cache[key] ? this.cache[key][safeIndex - 1] : null;
     if (!img) {
-      img = this.loadSingleFrame(folderName, plane, index);
+      img = this.loadSingleFrame(folderName, plane, safeIndex);
     }
 
     if (img && img.complete && img.naturalWidth > 0) {
@@ -165,12 +206,10 @@ class ImageSequenceManager {
       ctx.fillRect(0, 0, cW, cH);
       ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
-      // Tier 1: Sliding Window ±15 frames around active position
-      const maxCount = this.detectedCounts[key] || 140;
-      for (let k = -15; k <= 15; k++) {
-        if (k === 0) continue;
-        const targetIdx = index + k;
-        if (targetIdx >= 1 && targetIdx <= maxCount) {
+      if (maxCount > 1) {
+        for (let k = -15; k <= 15; k++) {
+          if (k === 0) continue;
+          const targetIdx = ((safeIndex - 1 + k + maxCount) % maxCount + maxCount) % maxCount + 1;
           this.loadSingleFrame(folderName, plane, targetIdx);
         }
       }
@@ -178,7 +217,6 @@ class ImageSequenceManager {
       return true;
     }
 
-    // Display clear, bright 18px "Loading..." text overlay while frame is fetching
     ctx.fillStyle = '#05070c';
     ctx.fillRect(0, 0, cW, cH);
     ctx.font = '700 18px Inter, sans-serif';
@@ -187,172 +225,18 @@ class ImageSequenceManager {
     ctx.textBaseline = 'middle';
     ctx.fillText('Loading...', cW / 2, cH / 2);
 
-    // Trigger ±15 preloads while loading current frame
-    const maxCount = this.detectedCounts[key] || 140;
-    for (let k = -15; k <= 15; k++) {
-      const targetIdx = index + k;
-      if (targetIdx >= 1 && targetIdx <= maxCount) {
-        this.loadSingleFrame(folderName, plane, targetIdx);
-      }
-    }
-
     return true;
   }
 }
 
 window.imageSequenceManager = new ImageSequenceManager();
 
-// 3. REAL VIDEO ENGINE WITH ASPECT FIT
-class VideoStreamManager {
-  constructor() {
-    this.videos = {
-      axial: document.createElement('video'),
-      sagittal: document.createElement('video'),
-      coronal: document.createElement('video'),
-      '3d_horizontal': document.createElement('video'),
-      '3d_vertical': document.createElement('video')
-    };
 
-    this.loaded = {
-      axial: false,
-      sagittal: false,
-      coronal: false,
-      '3d_horizontal': false,
-      '3d_vertical': false
-    };
 
-    this.isSeeking = {
-      axial: false,
-      sagittal: false,
-      coronal: false,
-      '3d_horizontal': false,
-      '3d_vertical': false
-    };
-
-    Object.keys(this.videos).forEach(key => {
-      const v = this.videos[key];
-      v.muted = true;
-      v.playsInline = true;
-      v.webkitPlaysInline = true;
-      v.preload = 'none';
-
-      v.addEventListener('loadedmetadata', () => {
-        this.loaded[key] = true;
-        if (key === 'axial' || key === 'sagittal' || key === 'coronal') {
-          window.renderAll2D();
-        } else {
-          window.render3D();
-        }
-      });
-
-      v.addEventListener('seeking', () => { this.isSeeking[key] = true; });
-
-      v.addEventListener('seeked', () => {
-        this.isSeeking[key] = false;
-        if (key === 'axial' || key === 'sagittal' || key === 'coronal') {
-          window.drawVideoToCanvas(key);
-        } else if (key === '3d_horizontal') {
-          window.drawVideo3DHorizToCanvas();
-        } else if (key === '3d_vertical') {
-          window.drawVideo3DVertToCanvas();
-        }
-      });
-
-      v.addEventListener('error', () => { this.loaded[key] = false; });
-    });
-  }
-
-  loadCaseVideos(folderName) {
-    const types = ['axial', 'sagittal', 'coronal', '3d_horizontal', '3d_vertical'];
-    types.forEach(type => {
-      this.loaded[type] = false;
-      this.isSeeking[type] = false;
-      const v = this.videos[type];
-      v.src = `./videos/${folderName}/${type}.mp4`;
-    });
-  }
-
-  seek2D(plane, ratio) {
-    const v = this.videos[plane];
-    if (this.loaded[plane] && v && v.duration) {
-      const targetTime = Math.max(0, Math.min(v.duration - 0.02, ratio * v.duration));
-      if (Math.abs(v.currentTime - targetTime) > 0.01 && !this.isSeeking[plane]) {
-        v.currentTime = targetTime;
-      }
-      window.drawVideoToCanvas(plane);
-      return true;
-    }
-    return false;
-  }
-
-  seek3DHorizontal(ratio) {
-    const v = this.videos['3d_horizontal'];
-    if (this.loaded['3d_horizontal'] && v && v.duration) {
-      const targetTime = Math.max(0, Math.min(v.duration - 0.02, ratio * v.duration));
-      if (Math.abs(v.currentTime - targetTime) > 0.01 && !this.isSeeking['3d_horizontal']) {
-        v.currentTime = targetTime;
-      }
-      window.drawVideo3DHorizToCanvas();
-      return true;
-    }
-    return false;
-  }
-
-  seek3DVertical(ratio) {
-    const v = this.videos['3d_vertical'];
-    if (this.loaded['3d_vertical'] && v && v.duration) {
-      const targetTime = Math.max(0, Math.min(v.duration - 0.02, ratio * v.duration));
-      if (Math.abs(v.currentTime - targetTime) > 0.01 && !this.isSeeking['3d_vertical']) {
-        v.currentTime = targetTime;
-      }
-      window.drawVideo3DVertToCanvas();
-      return true;
-    }
-    return false;
-  }
-}
-
-window.videoStreamManager = new VideoStreamManager();
-
-// 4. SYNTHETIC CANVAS FALLBACK ENGINE
-class SyntheticCanvasRenderer {
-  static render2DSlice(canvas, plane, currentSlice, totalSlices) {
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width || 400;
-    const height = canvas.height || 400;
-
-    ctx.fillStyle = '#05070c';
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.font = '700 18px Inter, sans-serif';
-    ctx.fillStyle = '#00e5ff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Loading...', width / 2, height / 2);
-  }
-
-  static render3DSingleView(canvas, rotH, isVert) {
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width || 400;
-    const height = canvas.height || 400;
-
-    ctx.fillStyle = '#05070c';
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.font = '700 18px Inter, sans-serif';
-    ctx.fillStyle = '#00e5ff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Loading...', width / 2, height / 2);
-  }
-}
-
-// 5. TOUCH CONTROLLER ENGINE
+// 3. TOUCH CONTROLLER ENGINE
 class TouchController {
   static bindScrub(canvas, onStepChange) {
-    if (!canvas) return;
+    if (!canvas) return () => {};
     let startVal = 0;
     let isDragging = false;
     const pxPerStep = 4;
@@ -360,7 +244,7 @@ class TouchController {
     const onStart = (e) => {
       isDragging = true;
       const touch = e.touches ? e.touches[0] : e;
-      startVal = touch.clientX || touch.clientY;
+      startVal = touch.clientX;
     };
 
     const onMove = (e) => {
@@ -368,7 +252,7 @@ class TouchController {
       if (e.cancelable) e.preventDefault();
 
       const touch = e.touches ? e.touches[0] : e;
-      const curVal = touch.clientX || touch.clientY;
+      const curVal = touch.clientX;
       const d = startVal - curVal;
 
       if (Math.abs(d) >= pxPerStep) {
@@ -385,18 +269,30 @@ class TouchController {
     canvas.addEventListener('touchstart', onStart, { passive: false });
     canvas.addEventListener('touchmove', onMove, { passive: false });
     canvas.addEventListener('touchend', onEnd);
-
     canvas.addEventListener('mousedown', onStart);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onEnd);
+
+    // Returns a dispose function to cleanly remove all listeners if needed
+    return () => {
+      canvas.removeEventListener('touchstart', onStart);
+      canvas.removeEventListener('touchmove', onMove);
+      canvas.removeEventListener('touchend', onEnd);
+      canvas.removeEventListener('mousedown', onStart);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+    };
   }
 }
 
-// 6. MAIN WORKSPACE APP STATE
+// 4. MAIN WORKSPACE APP STATE
 let currentCaseObj = window.CASES_DATA[0];
-let slicesState = { axial: 70, sagittal: 54, coronal: 55 };
+let slicesState = { axial: 1, sagittal: 1, coronal: 1 };
 let rot3DState = { horiz: 0, vert: 0 };
-let currentMode = '2d';
+
+// rAF handles — ensures canvas redraws sync with browser repaint cycle (60fps on iPad)
+window._raf2D = null;
+window._raf3D = null;
 
 window.updateSliderLimits = function(plane, maxCount) {
   let slider = null;
@@ -404,11 +300,13 @@ window.updateSliderLimits = function(plane, maxCount) {
   if (plane === 'sagittal') slider = document.getElementById('sliderSagittal');
   if (plane === 'coronal') slider = document.getElementById('sliderCoronal');
 
-  if (slider) {
+  if (slider && maxCount > 0) {
     slider.max = maxCount;
     if (slicesState[plane] > maxCount) slicesState[plane] = maxCount;
   }
-  window.renderAll2D();
+  // Debounce: slider limit updates can fire rapidly during batch load — coalesce into 1 render
+  clearTimeout(window._sliderDebounce);
+  window._sliderDebounce = setTimeout(() => window.renderAll2D(), 16);
 };
 
 // Global Navigation Functions
@@ -417,7 +315,6 @@ window.openCase = function(caseId) {
   if (found) currentCaseObj = found;
 
   window.imageSequenceManager.preloadCase(currentCaseObj.folder, currentCaseObj.slices);
-  window.videoStreamManager.loadCaseVideos(currentCaseObj.folder);
 
   const homeView = document.getElementById('homeView');
   const caseView = document.getElementById('caseView');
@@ -428,17 +325,23 @@ window.openCase = function(caseId) {
   const dropdown = document.getElementById('caseSelectDropdown');
   if (dropdown) dropdown.value = currentCaseObj.id;
 
-  slicesState.axial = Math.floor(currentCaseObj.slices.axial / 2);
-  slicesState.sagittal = Math.floor(currentCaseObj.slices.sagittal / 2);
-  slicesState.coronal = Math.floor(currentCaseObj.slices.coronal / 2);
+  const currentIdx = window.CASES_DATA.findIndex(c => c.id === currentCaseObj.id);
+  const btnPrev = document.getElementById('btnPrevCase');
+  const btnNext = document.getElementById('btnNextCase');
+  if (btnPrev) btnPrev.disabled = (currentIdx <= 0);
+  if (btnNext) btnNext.disabled = (currentIdx >= window.CASES_DATA.length - 1);
+
+  slicesState.axial = 1;
+  slicesState.sagittal = 1;
+  slicesState.coronal = 1;
 
   const sliderAxial = document.getElementById('sliderAxial');
   const sliderSagittal = document.getElementById('sliderSagittal');
   const sliderCoronal = document.getElementById('sliderCoronal');
 
-  if (sliderAxial) { sliderAxial.max = currentCaseObj.slices.axial; sliderAxial.value = slicesState.axial; }
-  if (sliderSagittal) { sliderSagittal.max = currentCaseObj.slices.sagittal; sliderSagittal.value = slicesState.sagittal; }
-  if (sliderCoronal) { sliderCoronal.max = currentCaseObj.slices.coronal; sliderCoronal.value = slicesState.coronal; }
+  if (sliderAxial) { sliderAxial.max = currentCaseObj.slices.axial; sliderAxial.value = 1; }
+  if (sliderSagittal) { sliderSagittal.max = currentCaseObj.slices.sagittal; sliderSagittal.value = 1; }
+  if (sliderCoronal) { sliderCoronal.max = currentCaseObj.slices.coronal; sliderCoronal.value = 1; }
 
   rot3DState.horiz = 0;
   rot3DState.vert = 0;
@@ -451,6 +354,20 @@ window.openCase = function(caseId) {
   window.switchMode('2d');
 };
 
+window.prevCase = function() {
+  const currentIndex = window.CASES_DATA.findIndex(c => c.id === currentCaseObj.id);
+  if (currentIndex > 0) {
+    window.openCase(window.CASES_DATA[currentIndex - 1].id);
+  }
+};
+
+window.nextCase = function() {
+  const currentIndex = window.CASES_DATA.findIndex(c => c.id === currentCaseObj.id);
+  if (currentIndex >= 0 && currentIndex < window.CASES_DATA.length - 1) {
+    window.openCase(window.CASES_DATA[currentIndex + 1].id);
+  }
+};
+
 window.showHome = function() {
   const homeView = document.getElementById('homeView');
   const caseView = document.getElementById('caseView');
@@ -460,7 +377,6 @@ window.showHome = function() {
 };
 
 window.switchMode = function(mode) {
-  currentMode = mode;
   const btn2D = document.getElementById('btnMode2D');
   const btn3D = document.getElementById('btnMode3D');
   const layout2D = document.getElementById('layout2D');
@@ -484,128 +400,58 @@ window.switchMode = function(mode) {
 };
 
 window.renderAll2D = function() {
-  const canvasAxial = document.getElementById('canvasAxial');
-  const canvasSagittal = document.getElementById('canvasSagittal');
-  const canvasCoronal = document.getElementById('canvasCoronal');
+  cancelAnimationFrame(window._raf2D);
+  window._raf2D = requestAnimationFrame(() => {
+    const canvasAxial = document.getElementById('canvasAxial');
+    const canvasSagittal = document.getElementById('canvasSagittal');
+    const canvasCoronal = document.getElementById('canvasCoronal');
 
-  window.resizeCanvas(canvasAxial);
-  window.resizeCanvas(canvasSagittal);
-  window.resizeCanvas(canvasCoronal);
+    window.resizeCanvas(canvasAxial);
+    window.resizeCanvas(canvasSagittal);
+    window.resizeCanvas(canvasCoronal);
 
-  const ctxAxial = canvasAxial.getContext('2d');
-  const ctxSag = canvasSagittal.getContext('2d');
-  const ctxCor = canvasCoronal.getContext('2d');
+    const ctxAxial = canvasAxial.getContext('2d');
+    const ctxSag = canvasSagittal.getContext('2d');
+    const ctxCor = canvasCoronal.getContext('2d');
 
-  const hasImgAxial = window.imageSequenceManager.drawFrame(ctxAxial, currentCaseObj.folder, 'axial', slicesState.axial, canvasAxial.width, canvasAxial.height);
-  const hasImgSag = window.imageSequenceManager.drawFrame(ctxSag, currentCaseObj.folder, 'sagittal', slicesState.sagittal, canvasSagittal.width, canvasSagittal.height);
-  const hasImgCor = window.imageSequenceManager.drawFrame(ctxCor, currentCaseObj.folder, 'coronal', slicesState.coronal, canvasCoronal.width, canvasCoronal.height);
+    window.imageSequenceManager.drawFrame(ctxAxial, currentCaseObj.folder, 'axial', slicesState.axial, canvasAxial.width, canvasAxial.height);
+    window.imageSequenceManager.drawFrame(ctxSag, currentCaseObj.folder, 'sagittal', slicesState.sagittal, canvasSagittal.width, canvasSagittal.height);
+    window.imageSequenceManager.drawFrame(ctxCor, currentCaseObj.folder, 'coronal', slicesState.coronal, canvasCoronal.width, canvasCoronal.height);
 
-  if (!hasImgAxial) {
-    const ratioAxial = (slicesState.axial - 1) / Math.max(1, currentCaseObj.slices.axial - 1);
-    const hasAxialVid = window.videoStreamManager.seek2D('axial', ratioAxial);
-    if (!hasAxialVid) SyntheticCanvasRenderer.render2DSlice(canvasAxial, 'axial', slicesState.axial, currentCaseObj.slices.axial);
-  }
+    const countAxial = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_axial`] || currentCaseObj.slices.axial;
+    const countSag = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_sagittal`] || currentCaseObj.slices.sagittal;
+    const countCor = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_coronal`] || currentCaseObj.slices.coronal;
 
-  if (!hasImgSag) {
-    const ratioSagittal = (slicesState.sagittal - 1) / Math.max(1, currentCaseObj.slices.sagittal - 1);
-    const hasSagVid = window.videoStreamManager.seek2D('sagittal', ratioSagittal);
-    if (!hasSagVid) SyntheticCanvasRenderer.render2DSlice(canvasSagittal, 'sagittal', slicesState.sagittal, currentCaseObj.slices.sagittal);
-  }
-
-  if (!hasImgCor) {
-    const ratioCoronal = (slicesState.coronal - 1) / Math.max(1, currentCaseObj.slices.coronal - 1);
-    const hasCorVid = window.videoStreamManager.seek2D('coronal', ratioCoronal);
-    if (!hasCorVid) SyntheticCanvasRenderer.render2DSlice(canvasCoronal, 'coronal', slicesState.coronal, currentCaseObj.slices.coronal);
-  }
-
-  document.getElementById('badgeAxial').textContent = `${slicesState.axial}/${currentCaseObj.slices.axial}`;
-  document.getElementById('badgeSagittal').textContent = `${slicesState.sagittal}/${currentCaseObj.slices.sagittal}`;
-  document.getElementById('badgeCoronal').textContent = `${slicesState.coronal}/${currentCaseObj.slices.coronal}`;
-};
-
-function drawVideoAspectFit(ctx, video, cW, cH) {
-  const vW = video.videoWidth || 512;
-  const vH = video.videoHeight || 512;
-
-  const scale = Math.min(cW / vW, cH / vH);
-  const drawW = vW * scale;
-  const drawH = vH * scale;
-  const drawX = (cW - drawW) / 2;
-  const drawY = (cH - drawH) / 2;
-
-  ctx.fillStyle = '#05070c';
-  ctx.fillRect(0, 0, cW, cH);
-  ctx.drawImage(video, drawX, drawY, drawW, drawH);
-}
-
-window.drawVideoToCanvas = function(plane) {
-  let canvas = null;
-  if (plane === 'axial') canvas = document.getElementById('canvasAxial');
-  if (plane === 'sagittal') canvas = document.getElementById('canvasSagittal');
-  if (plane === 'coronal') canvas = document.getElementById('canvasCoronal');
-
-  if (!canvas) return;
-  const video = window.videoStreamManager.videos[plane];
-  if (video && (video.readyState >= 2 || video.currentTime > 0)) {
-    const ctx = canvas.getContext('2d');
-    drawVideoAspectFit(ctx, video, canvas.width, canvas.height);
-  }
+    document.getElementById('badgeAxial').textContent = `${slicesState.axial}/${countAxial}`;
+    document.getElementById('badgeSagittal').textContent = `${slicesState.sagittal}/${countSag}`;
+    document.getElementById('badgeCoronal').textContent = `${slicesState.coronal}/${countCor}`;
+  });
 };
 
 window.render3D = function() {
-  const canvasH = document.getElementById('canvas3DHoriz');
-  const canvasV = document.getElementById('canvas3DVert');
+  cancelAnimationFrame(window._raf3D);
+  window._raf3D = requestAnimationFrame(() => {
+    const canvasH = document.getElementById('canvas3DHoriz');
+    const canvasV = document.getElementById('canvas3DVert');
 
-  window.resizeCanvas(canvasH);
-  window.resizeCanvas(canvasV);
+    window.resizeCanvas(canvasH);
+    window.resizeCanvas(canvasV);
 
-  const countH = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_horizontal`] || 72;
-  const ratioH = Math.max(0, Math.min(0.9999, (rot3DState.horiz % 360) / 360));
-  const frameH = Math.floor(ratioH * countH) + 1;
+    const countH = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_horizontal`] || (currentCaseObj.views3d ? currentCaseObj.views3d.horizontal : 92);
+    const ratioH = Math.max(0, Math.min(0.9999, (rot3DState.horiz % 360) / 360));
+    const frameH = Math.floor(ratioH * countH) + 1;
 
-  const countV = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_vertical`] || 140;
-  const ratioV = Math.max(0, Math.min(0.9999, (rot3DState.vert % 360) / 360));
-  const frameV = Math.floor(ratioV * countV) + 1;
+    const countV = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_vertical`] || (currentCaseObj.views3d ? currentCaseObj.views3d.vertical : 108);
+    const ratioV = Math.max(0, Math.min(0.9999, (rot3DState.vert % 360) / 360));
+    const frameV = Math.floor(ratioV * countV) + 1;
 
-  const ctxH = canvasH.getContext('2d');
-  const ctxV = canvasV.getContext('2d');
+    const ctxH = canvasH.getContext('2d');
+    const ctxV = canvasV.getContext('2d');
 
-  const hasImgH = window.imageSequenceManager.drawFrame(ctxH, currentCaseObj.folder, '3d_horizontal', frameH, canvasH.width, canvasH.height);
-  const hasImgV = window.imageSequenceManager.drawFrame(ctxV, currentCaseObj.folder, '3d_vertical', frameV, canvasV.width, canvasV.height);
-
-  if (!hasImgH) {
-    const rH = rot3DState.horiz / 360;
-    const hasVidH = window.videoStreamManager.seek3DHorizontal(rH);
-    if (!hasVidH) SyntheticCanvasRenderer.render3DSingleView(canvasH, rot3DState.horiz, false);
-  }
-
-  if (!hasImgV) {
-    const rV = rot3DState.vert / 360;
-    const hasVidV = window.videoStreamManager.seek3DVertical(rV);
-    if (!hasVidV) SyntheticCanvasRenderer.render3DSingleView(canvasV, rot3DState.vert, true);
-  }
+    window.imageSequenceManager.drawFrame(ctxH, currentCaseObj.folder, '3d_horizontal', frameH, canvasH.width, canvasH.height);
+    window.imageSequenceManager.drawFrame(ctxV, currentCaseObj.folder, '3d_vertical', frameV, canvasV.width, canvasV.height);
+  });
 };
-
-window.drawVideo3DHorizToCanvas = function() {
-  const canvas = document.getElementById('canvas3DHoriz');
-  if (!canvas) return;
-  const video = window.videoStreamManager.videos['3d_horizontal'];
-  if (video && (video.readyState >= 2 || video.currentTime > 0)) {
-    const ctx = canvas.getContext('2d');
-    drawVideoAspectFit(ctx, video, canvas.width, canvas.height);
-  }
-};
-
-window.drawVideo3DVertToCanvas = function() {
-  const canvas = document.getElementById('canvas3DVert');
-  if (!canvas) return;
-  const video = window.videoStreamManager.videos['3d_vertical'];
-  if (video && (video.readyState >= 2 || video.currentTime > 0)) {
-    const ctx = canvas.getContext('2d');
-    drawVideoAspectFit(ctx, video, canvas.width, canvas.height);
-  }
-};
-
 window.resizeCanvas = function(canvas) {
   if (!canvas || !canvas.parentElement) return;
   const rect = canvas.parentElement.getBoundingClientRect();
@@ -622,6 +468,11 @@ window.resizeCanvas = function(canvas) {
 document.addEventListener('DOMContentLoaded', () => {
   const dropdown = document.getElementById('caseSelectDropdown');
   if (dropdown) dropdown.addEventListener('change', (e) => window.openCase(e.target.value));
+
+  const btnPrev = document.getElementById('btnPrevCase');
+  const btnNext = document.getElementById('btnNextCase');
+  if (btnPrev) btnPrev.addEventListener('click', () => window.prevCase());
+  if (btnNext) btnNext.addEventListener('click', () => window.nextCase());
 
   const btnHome = document.getElementById('btnBackHome');
   if (btnHome) btnHome.addEventListener('click', () => window.showHome());
@@ -644,34 +495,49 @@ document.addEventListener('DOMContentLoaded', () => {
   if (slider3DH) slider3DH.addEventListener('input', (e) => { rot3DState.horiz = parseInt(e.target.value); window.render3D(); });
   if (slider3DV) slider3DV.addEventListener('input', (e) => { rot3DState.vert = parseInt(e.target.value); window.render3D(); });
 
-  // Touch Scrubbing
+  // Touch Scrubbing synchronized with exact frame count for 3D
   TouchController.bindScrub(document.getElementById('canvasAxial'), (step) => {
-    slicesState.axial = Math.max(1, Math.min(currentCaseObj.slices.axial, slicesState.axial - step));
+    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_axial`] || currentCaseObj.slices.axial;
+    slicesState.axial = Math.max(1, Math.min(count, slicesState.axial - step));
     document.getElementById('sliderAxial').value = slicesState.axial;
     window.renderAll2D();
   });
 
   TouchController.bindScrub(document.getElementById('canvasSagittal'), (step) => {
-    slicesState.sagittal = Math.max(1, Math.min(currentCaseObj.slices.sagittal, slicesState.sagittal - step));
+    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_sagittal`] || currentCaseObj.slices.sagittal;
+    slicesState.sagittal = Math.max(1, Math.min(count, slicesState.sagittal - step));
     document.getElementById('sliderSagittal').value = slicesState.sagittal;
     window.renderAll2D();
   });
 
   TouchController.bindScrub(document.getElementById('canvasCoronal'), (step) => {
-    slicesState.coronal = Math.max(1, Math.min(currentCaseObj.slices.coronal, slicesState.coronal - step));
+    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_coronal`] || currentCaseObj.slices.coronal;
+    slicesState.coronal = Math.max(1, Math.min(count, slicesState.coronal - step));
     document.getElementById('sliderCoronal').value = slicesState.coronal;
     window.renderAll2D();
   });
 
   TouchController.bindScrub(document.getElementById('canvas3DHoriz'), (step) => {
-    rot3DState.horiz = (rot3DState.horiz - step * 2 + 360) % 360;
+    const countH = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_horizontal`] || (currentCaseObj.views3d ? currentCaseObj.views3d.horizontal : 92);
+    const degreePerFrame = 360 / countH;
+    rot3DState.horiz = (rot3DState.horiz - step * degreePerFrame + 360) % 360;
     document.getElementById('slider3DHoriz').value = rot3DState.horiz;
     window.render3D();
   });
 
   TouchController.bindScrub(document.getElementById('canvas3DVert'), (step) => {
-    rot3DState.vert = (rot3DState.vert - step * 2 + 360) % 360;
+    const countV = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_3d_vertical`] || (currentCaseObj.views3d ? currentCaseObj.views3d.vertical : 108);
+    const degreePerFrame = 360 / countV;
+    rot3DState.vert = (rot3DState.vert - step * degreePerFrame + 360) % 360;
     document.getElementById('slider3DVert').value = rot3DState.vert;
     window.render3D();
+  });
+  // 5. STABILITY: Re-render when user returns from lock screen or app switch
+  // Safari may suspend tab rendering; visibilitychange ensures canvas is always up-to-date
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && currentCaseObj) {
+      window.renderAll2D();
+      window.render3D();
+    }
   });
 });

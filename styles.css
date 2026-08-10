@@ -52,7 +52,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
   position: relative;
   z-index: 100;
 }
@@ -113,6 +115,41 @@ html, body {
   border-color: var(--accent-cyan);
 }
 
+.case-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon-nav {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-nav:active {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.btn-icon-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
 .case-select-dropdown {
   height: 40px;
   background: var(--bg-card);
@@ -137,8 +174,10 @@ html, body {
 /* Home View - 10 Minimalist Touch Grid */
 .view-section {
   display: none;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 56px);     /* fallback */
+  height: calc(100dvh - 56px);    /* mobile: excludes browser chrome (address bar) */
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .view-section.active {
@@ -220,7 +259,8 @@ html, body {
 .case-viewer-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 56px);     /* fallback */
+  height: calc(100dvh - 56px);    /* mobile: excludes browser chrome */
   width: 100%;
   overflow: hidden;
 }
@@ -372,6 +412,10 @@ canvas.ct-canvas {
   pointer-events: none;
 }
 
+
+/* ==========================================
+   RESPONSIVE — Tablet (≤900px)
+   ========================================== */
 @media (max-width: 900px) {
   .view-2d-layout {
     grid-template-columns: 1fr;
@@ -380,5 +424,165 @@ canvas.ct-canvas {
   .view-3d-grid {
     grid-template-columns: 1fr;
     grid-template-rows: repeat(2, 1fr);
+  }
+  .btn-toggle span {
+    font-size: 0.85rem;
+  }
+}
+
+/* ==========================================
+   RESPONSIVE — Mobile Phone (≤600px)
+   ========================================== */
+@media (max-width: 600px) {
+  /* Header: shrink height, tighter padding */
+  .app-header {
+    height: 52px;
+    padding: 0 10px;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
+
+  /* Hide text labels on Home button — icon only */
+  .btn-secondary span {
+    display: none;
+  }
+  .btn-secondary {
+    width: 38px;
+    padding: 0;
+    min-width: unset;
+  }
+
+  /* Hide text labels on mode toggle — icons only */
+  .btn-toggle span {
+    display: none;
+  }
+  .btn-toggle {
+    width: 38px;
+    padding: 0;
+    min-width: unset;
+  }
+
+  /* Dropdown narrower */
+  .case-select-dropdown {
+    font-size: 0.9rem;
+    padding: 0 8px;
+    max-width: 110px;
+  }
+
+  /* Prev/Next buttons smaller */
+  .btn-icon-nav {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+  .case-nav-group {
+    gap: 4px;
+  }
+
+  /* Account for notch/home indicator at bottom */
+  .case-viewer-container {
+    height: calc(100dvh - 52px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Home view — tighter padding, smaller title */
+  #homeView {
+    padding: 16px;
+  }
+  .home-title {
+    font-size: 1.4rem;
+  }
+  .cases-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .case-card {
+    min-height: 100px;
+    padding: 18px 12px;
+  }
+  .case-title {
+    font-size: 1.4rem;
+  }
+
+  /* Viewport header — compact */
+  .viewport-header {
+    height: 32px;
+    font-size: 0.75rem;
+    padding: 0 10px;
+  }
+
+  /* Slider bar taller for easier touch */
+  .slice-slider {
+    height: 10px;
+  }
+  .slice-slider::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Viewport controls area taller */
+  .viewport-controls {
+    height: 52px;
+    padding: 0 10px;
+  }
+
+  /* Touch hint — smaller */
+  .touch-hint {
+    font-size: 0.68rem;
+    padding: 3px 10px;
+    bottom: 8px;
+  }
+
+  /* Badge smaller */
+  .slice-badge {
+    font-size: 0.75rem;
+    min-width: 48px;
+  }
+
+  /* 2D grid: 1 column stack, each viewport takes ~33% height */
+  .view-2d-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    padding: 4px;
+  }
+
+  /* 3D grid: 1 column stack */
+  .view-3d-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, 1fr);
+    gap: 4px;
+    padding: 4px;
+  }
+
+  /* Viewport border radius tighter on phone */
+  .viewport-box {
+    border-radius: 10px;
+  }
+}
+
+/* ==========================================
+   RESPONSIVE — Very Small (≤375px, SE etc.)
+   ========================================== */
+@media (max-width: 375px) {
+  .case-select-dropdown {
+    max-width: 90px;
+    font-size: 0.8rem;
+  }
+  .cases-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .home-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* ==========================================
+   SAFE AREA — iPhone notch/home indicator
+   ========================================== */
+@supports (padding: max(0px)) {
+  .app-header {
+    padding-top: env(safe-area-inset-top, 0px);
   }
 }

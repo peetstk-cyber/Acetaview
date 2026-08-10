@@ -23,25 +23,33 @@
   <!-- Unified Top Header Navigation Bar -->
   <header class="app-header">
     <div class="header-left">
-      <button id="btnBackHome" class="btn btn-secondary" onclick="showHome();">
+      <button id="btnBackHome" class="btn btn-secondary">
         <i class="fa-solid fa-house"></i>
         <span>Home</span>
       </button>
     </div>
 
     <div class="header-center">
-      <select id="caseSelectDropdown" class="case-select-dropdown">
-        <option value="case-01">Case 01</option>
-        <option value="case-02">Case 02</option>
-        <option value="case-03">Case 03</option>
-        <option value="case-04">Case 04</option>
-        <option value="case-05">Case 05</option>
-        <option value="case-06">Case 06</option>
-        <option value="case-07">Case 07</option>
-        <option value="case-08">Case 08</option>
-        <option value="case-09">Case 09</option>
-        <option value="case-10">Case 10</option>
-      </select>
+      <div class="case-nav-group">
+        <button id="btnPrevCase" class="btn btn-icon-nav" title="Previous Case">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <select id="caseSelectDropdown" class="case-select-dropdown">
+          <option value="case-01">Case 01</option>
+          <option value="case-02">Case 02</option>
+          <option value="case-03">Case 03</option>
+          <option value="case-04">Case 04</option>
+          <option value="case-05">Case 05</option>
+          <option value="case-06">Case 06</option>
+          <option value="case-07">Case 07</option>
+          <option value="case-08">Case 08</option>
+          <option value="case-09">Case 09</option>
+          <option value="case-10">Case 10</option>
+        </select>
+        <button id="btnNextCase" class="btn btn-icon-nav" title="Next Case">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
     </div>
 
     <div class="header-right">
@@ -60,10 +68,6 @@
 
   <!-- VIEW 1: Home Case Selector (10 Minimalist Case Cards) -->
   <main id="homeView" class="view-section active">
-    <div class="home-hero">
-      <h1 class="home-title">Select Case</h1>
-    </div>
-
     <!-- 10 Minimalist Case Cards Grid -->
     <div id="casesGrid" class="cases-grid">
       
