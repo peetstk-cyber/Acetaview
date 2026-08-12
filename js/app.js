@@ -207,7 +207,7 @@ class ImageSequenceManager {
       ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
       if (maxCount > 1) {
-        for (let k = -15; k <= 15; k++) {
+        for (let k = -10; k <= 10; k++) {
           if (k === 0) continue;
           const targetIdx = ((safeIndex - 1 + k + maxCount) % maxCount + maxCount) % maxCount + 1;
           this.loadSingleFrame(folderName, plane, targetIdx);
