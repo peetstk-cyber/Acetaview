@@ -1,42 +1,49 @@
 # 🚀 Server Deployment & Hosting Guide (30 Concurrent iPad Users)
 
-This web application is built as a high-performance **Static Single Page Application (SPA)** using HTML5, CSS3, and ES Modules. It can be hosted on any web server without complex backend infrastructure.
+This web application is built as a high-performance **Static Single Page Application (SPA)** with zero backend database dependencies.
 
 ---
 
-## ⚡ Recommended Nginx Configuration
+## 🏃 Option 1: Quick Local LAN Server (Recommended for Classroom/Room Testing)
 
-Nginx handles static MP4 video range requests (`HTTP 206`) with high efficiency and minimal CPU overhead.
+We have provided a custom multi-threaded Python server script `server.py` that includes:
+- Multi-threading support (`ThreadingHTTPServer`) to serve 30+ iPads simultaneously without blocking.
+- Static image caching headers (`Cache-Control: public, max-age=31536000, immutable`).
+- High socket backlog (`request_queue_size = 256`).
+
+### How to Run:
+```bash
+cd "/Users/waris/Project/Research Acetabulum copy 2"
+python3 server.py
+```
+
+The script will automatically detect and print your Mac's LAN IP:
+```
+📱 iPad / LAN URL : http://192.168.1.XX:8080
+```
+Simply type that address into Safari on each iPad.
+
+---
+
+## ⚡ Option 2: Production Nginx Server (Maximum Throughput)
+
+Nginx handles concurrent static image requests with event-driven `epoll` architecture and HTTP/2 multiplexing.
 
 ### Sample `/etc/nginx/sites-available/acetaview.conf`:
 
 ```nginx
 server {
     listen 80;
-    server_name acetaview.local; # or server IP
+    server_name acetaview.local;
 
     root /var/www/acetaview;
     index index.html;
 
-    # Enable HTTP/2 for concurrent stream multiplexing
-    listen 443 ssl http2;
-    # ssl_certificate /path/to/cert.pem;
-    # ssl_certificate_key /path/to/key.pem;
-
-    # Enable Range Requests for Video Seeking
-    location /videos/ {
-        mp4;
-        mp4_buffer_size 1m;
-        mp4_max_buffer_size 10m;
-
-        add_header Accept-Ranges bytes;
+    # Static Assets & Images Caching
+    location ~* \.(jpg|jpeg|png|webp|mp4|css|js|svg)$ {
+        expires 365d;
         add_header Cache-Control "public, max-age=31536000, immutable";
-    }
-
-    # Static Assets Caching
-    location ~* \.(css|js|png|jpg|jpeg|svg|ico)$ {
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
+        access_log off;
     }
 
     location / {
@@ -47,13 +54,8 @@ server {
 
 ---
 
-## 🏃 Quick Local Test Server (Using Python 3)
+## ☁️ Option 3: Cloud Hosting (Vercel / Cloudflare Pages)
 
-You can launch a test server directly on your local machine / LAN:
-
-```bash
-cd "/Users/waris/Project/Research Acetabulum"
-python3 -m http.server 8080
-```
-
-Then open `http://<YOUR_COMPUTER_IP>:8080` on your iPad!
+If participants are using cellular data (4G/5G) or separate Wi-Fi networks:
+- **Vercel**: Run `npx vercel --prod`
+- The included `vercel.json` already contains long-term immutable caching headers for all slice images.
