@@ -63,6 +63,9 @@
           <span>3D Reconstruction</span>
         </button>
       </div>
+      <button id="btnViewOption" class="btn btn-icon-nav btn-view-option" title="Current: 2-View Fit (Click for 3-View Fit)" onclick="toggleViewOption();">
+        <i class="fa-solid fa-table-columns"></i>
+      </button>
     </div>
   </header>
 
@@ -274,6 +277,49 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- Confidential Admin Case Metadata Modal (Triggered by clicking Home 7 times) -->
+  <div id="adminModal" class="admin-modal-overlay" style="display:none;">
+    <div class="admin-modal-container">
+      <div class="admin-modal-header">
+        <div class="admin-modal-title">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>Confidential Case Metadata (Admin)</span>
+        </div>
+        <button class="admin-modal-close" onclick="closeAdminModal();" title="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="admin-modal-body">
+        <p class="admin-modal-desc">
+          ระบบจดข้อมูลลับเฉพาะผู้ดูแลระบบ (Admin) สำหรับจับคู่เคสวิจัยกับข้อมูลจริง ข้อมูลจะถูกบันทึกใน Local Storage ของอุปกรณ์นี้โดยอัตโนมัติ และสามารถ Export ข้อมูลไปอัปเดตลงไฟล์ได้
+        </p>
+
+        <div id="adminCasesList" class="admin-cases-list">
+          <!-- Dynamically populated cases via JS -->
+        </div>
+      </div>
+
+      <div class="admin-modal-footer">
+        <button class="btn btn-secondary" onclick="openLocalFile();" title="เลือกไฟล์ cases_metadata.json จากเครื่องเพื่อโหลดข้อมูล">
+          <i class="fa-solid fa-folder-open"></i> โหลดไฟล์จากเครื่อง
+        </button>
+        <button class="btn btn-secondary" onclick="exportAdminData();" title="คัดลอก JSON เพื่อนำไปแปะ">
+          <i class="fa-solid fa-copy"></i> คัดลอก JSON
+        </button>
+        <button class="btn btn-save-admin" onclick="saveDirectlyToFile();" title="เขียนบันทึกไฟล์ cases_metadata.json ลงเครื่องโดยตรง">
+          <i class="fa-solid fa-file-arrow-down"></i> บันทึกลงไฟล์ในเครื่อง (Save File)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Notification Toast -->
+  <div id="adminToast" class="admin-toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="adminToastText">บันทึกข้อมูลสำเร็จเรียบร้อยแล้ว</span>
   </div>
 
   <!-- Single Unified Script -->

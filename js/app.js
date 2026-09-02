@@ -5,8 +5,8 @@
 
 // 1. CASES DATA
 window.CASES_DATA = [
-  { id: "case-01", caseNumber: 1, title: "Case 01", folder: "Case01", slices: { axial: 140, sagittal: 108, coronal: 110 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-02", caseNumber: 2, title: "Case 02", folder: "Case02", slices: { axial: 140, sagittal: 115, coronal: 125 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-01", caseNumber: 1, title: "Case 01", folder: "Case01", slices: { axial: 140, sagittal: 111, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-02", caseNumber: 2, title: "Case 02", folder: "Case02", slices: { axial: 160, sagittal: 153, coronal: 148 }, views3d: { horizontal: 27, vertical: 26 } },
   { id: "case-03", caseNumber: 3, title: "Case 03", folder: "Case03", slices: { axial: 110, sagittal: 95, coronal: 105 }, views3d: { horizontal: 92, vertical: 108 } },
   { id: "case-04", caseNumber: 4, title: "Case 04", folder: "Case04", slices: { axial: 105, sagittal: 90, coronal: 100 }, views3d: { horizontal: 92, vertical: 108 } },
   { id: "case-05", caseNumber: 5, title: "Case 05", folder: "Case05", slices: { axial: 130, sagittal: 110, coronal: 120 }, views3d: { horizontal: 92, vertical: 108 } },
@@ -63,9 +63,9 @@ class ImageSequenceManager {
     this.detectedCounts = {};
   }
 
-  preloadCase(folderName, slicesObj) {
+  preloadCase(folderName, slicesObj, views3dObj) {
     this.clearCache();
-    // FIX 3: Increment generation counter so stale scanNextBatch callbacks self-cancel
+    // Increment generation counter so stale scanNextBatch callbacks self-cancel
     this.generation = (this.generation || 0) + 1;
     const myGen = this.generation;
 
@@ -75,23 +75,28 @@ class ImageSequenceManager {
       const key = `${folderName}_${plane}`;
       this.cache[key] = [];
       
-      const defaultCount = (plane === '3d_horizontal') ? 92 : (plane === '3d_vertical') ? 108 : (slicesObj[plane] || 108);
+      let defaultCount = 100;
+      if (plane === '3d_horizontal') {
+        defaultCount = (views3dObj && views3dObj.horizontal) ? views3dObj.horizontal : 92;
+      } else if (plane === '3d_vertical') {
+        defaultCount = (views3dObj && views3dObj.vertical) ? views3dObj.vertical : 108;
+      } else if (slicesObj && slicesObj[plane]) {
+        defaultCount = slicesObj[plane];
+      }
       this.detectedCounts[key] = defaultCount;
 
-      // PHASE 1: Load only first 20 frames immediately on case open
-      // Avoids firing 360 simultaneous requests and triggering Vercel rate limiting
-      for (let i = 1; i <= 20; i++) {
+      // PHASE 1: Load initial frames immediately on case open
+      const initialLoad = Math.min(20, defaultCount);
+      for (let i = 1; i <= initialLoad; i++) {
         this.loadSingleFrame(folderName, plane, i);
       }
 
       // PHASE 2: Background key-frame scan in small batches every 200ms
-      // Discovers actual frame count without spamming the CDN
-      // maxScan is capped per plane type — 3D horizontal has 92 frames, 3D vertical has 108 frames
       const batchSize = 5;
-      const maxScan = (plane === '3d_horizontal') ? 110   // 92 frames + small buffer
-                    : (plane === '3d_vertical')   ? 120   // 108 frames + small buffer
-                    : 200;                                 // 2D planes: real data max ~145
-      let batchStart = 21;
+      const maxScan = (plane === '3d_horizontal') ? Math.max(defaultCount + 10, 110)
+                    : (plane === '3d_vertical')   ? Math.max(defaultCount + 10, 120)
+                    : Math.max(defaultCount + 10, 200);
+      let batchStart = initialLoad + 1;
       let consecutiveMiss = 0; // Early-stop: track consecutive frames with no valid image
 
       const scanNextBatch = () => {
@@ -102,8 +107,6 @@ class ImageSequenceManager {
         for (let i = batchStart; i <= batchEnd; i++) {
           const img = this.loadSingleFrame(folderName, plane, i);
 
-          // Early-stop: monitor each frame's outcome after a short delay
-          // If the frame slot becomes null (all candidates failed) = miss
           const frameIdx = i;
           setTimeout(() => {
             if (myGen !== this.generation) return;
@@ -113,7 +116,7 @@ class ImageSequenceManager {
             } else if (slot && slot.complete && slot.naturalWidth > 0) {
               consecutiveMiss = 0; // reset on any successful frame
             }
-          }, 2000); // wait 2s for slow connections before judging a frame as miss
+          }, 2000);
         }
 
         batchStart += batchSize;
@@ -124,8 +127,9 @@ class ImageSequenceManager {
         }
       };
 
-      // Start background scan after 500ms delay (after user sees initial frames)
-      setTimeout(scanNextBatch, 500);
+      if (batchStart <= maxScan) {
+        setTimeout(scanNextBatch, 500);
+      }
     });
   }
 
@@ -202,7 +206,7 @@ class ImageSequenceManager {
       const drawX = (cW - drawW) / 2;
       const drawY = (cH - drawH) / 2;
 
-      ctx.fillStyle = '#05070c';
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, cW, cH);
       ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
@@ -217,10 +221,10 @@ class ImageSequenceManager {
       return true;
     }
 
-    ctx.fillStyle = '#05070c';
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, cW, cH);
     ctx.font = '700 18px Inter, sans-serif';
-    ctx.fillStyle = '#00e5ff';
+    ctx.fillStyle = '#48c79c';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Loading...', cW / 2, cH / 2);
@@ -240,6 +244,7 @@ class TouchController {
     let startX = 0;
     let startY = 0;
     let lastX = 0;
+    let lastY = 0;
     let isDragging = false;
     let isHorizontalGesture = null;
 
@@ -250,6 +255,7 @@ class TouchController {
       startX = touch.clientX;
       startY = touch.clientY;
       lastX = touch.clientX;
+      lastY = touch.clientY;
     };
 
     const onMove = (e) => {
@@ -261,37 +267,56 @@ class TouchController {
       const diffX = curX - startX;
       const diffY = curY - startY;
 
-      // Smart Gesture Locking: detect direction on first 5px of movement
-      if (isHorizontalGesture === null) {
-        const absX = Math.abs(diffX);
-        const absY = Math.abs(diffY);
-        if (absX < 5 && absY < 5) return;
+      const isMobile = window.innerWidth <= 600;
 
-        if (absY > absX) {
-          isHorizontalGesture = false; // Vertical swipe -> allow native page scrolling
-          return;
-        } else {
-          isHorizontalGesture = true;  // Horizontal swipe -> lock gesture to CT slice scrubbing
+      if (isMobile) {
+        // MOBILE VERSION (<= 600px): Horizontal Scrubbing (Left/Right)
+        if (isHorizontalGesture === null) {
+          const absX = Math.abs(diffX);
+          const absY = Math.abs(diffY);
+          if (absX < 5 && absY < 5) return;
+
+          if (absY > absX) {
+            isHorizontalGesture = false; // Vertical swipe -> allow native page scrolling
+            return;
+          } else {
+            isHorizontalGesture = true;  // Horizontal swipe -> lock gesture to CT slice scrubbing
+          }
         }
-      }
 
-      // If user is scrolling the page vertically, do not interfere
-      if (isHorizontalGesture === false) return;
+        // If user is scrolling the page vertically on mobile, do not interfere
+        if (isHorizontalGesture === false) return;
 
-      // Horizontal swipe: scrub CT slices and prevent page horizontal panning
-      if (e.cancelable) e.preventDefault();
+        if (e.cancelable) e.preventDefault();
 
-      // Dynamic sensitivity: in Fullscreen mode use 12px/step for fine precision control (prevents fast jumping)
-      const box = canvas.closest('.viewport-box');
-      const isFullscreen = box ? box.classList.contains('fullscreen') : false;
-      const pxPerStep = isFullscreen ? 12 : 6;
+        const box = canvas.closest('.viewport-box');
+        const isFullscreen = box ? box.classList.contains('fullscreen') : false;
+        const pxPerStep = isFullscreen ? 12 : 6;
 
-      const d = lastX - curX;
-      if (Math.abs(d) >= pxPerStep) {
-        const steps = Math.trunc(d / pxPerStep);
-        if (steps !== 0) {
-          onStepChange(steps);
-          lastX = curX;
+        const d = lastX - curX;
+        if (Math.abs(d) >= pxPerStep) {
+          const steps = Math.trunc(d / pxPerStep);
+          if (steps !== 0) {
+            onStepChange(steps);
+            lastX = curX;
+          }
+        }
+      } else {
+        // DESKTOP & TABLET VERSION (> 600px): Vertical Scrubbing (Up/Down PACS standard)
+        if (e.cancelable) e.preventDefault();
+
+        const box = canvas.closest('.viewport-box');
+        const isFullscreen = box ? box.classList.contains('fullscreen') : false;
+        const pxPerStep = isFullscreen ? 12 : 6;
+
+        // Dragging DOWN advances slice forward, dragging UP moves backward
+        const d = lastY - curY;
+        if (Math.abs(d) >= pxPerStep) {
+          const steps = Math.trunc(d / pxPerStep);
+          if (steps !== 0) {
+            onStepChange(steps);
+            lastY = curY;
+          }
         }
       }
     };
@@ -363,7 +388,7 @@ window.openCase = function(caseId) {
   const found = window.CASES_DATA.find(c => c.id === caseId);
   if (found) currentCaseObj = found;
 
-  window.imageSequenceManager.preloadCase(currentCaseObj.folder, currentCaseObj.slices);
+  window.imageSequenceManager.preloadCase(currentCaseObj.folder, currentCaseObj.slices, currentCaseObj.views3d);
 
   // Close any active fullscreen mode when changing cases
   document.querySelectorAll('.viewport-box.fullscreen').forEach(box => {
@@ -454,6 +479,38 @@ window.switchMode = function(mode) {
 
     window.render3D();
   }
+};
+
+let currentViewFit = 2; // 2 = Fit 2 views (default), 3 = Fit 3 views
+
+window.toggleViewOption = function() {
+  currentViewFit = (currentViewFit === 2) ? 3 : 2;
+  const layout2D = document.getElementById('layout2D');
+  const btn = document.getElementById('btnViewOption');
+
+  if (layout2D) {
+    if (currentViewFit === 3) {
+      layout2D.classList.add('fit-3');
+    } else {
+      layout2D.classList.remove('fit-3');
+    }
+  }
+
+  if (btn) {
+    const icon = btn.querySelector('i');
+    if (currentViewFit === 3) {
+      btn.classList.add('active');
+      btn.title = 'Current: 3-View Fit (Click for 2-View Fit)';
+      if (icon) icon.className = 'fa-solid fa-table-cells';
+    } else {
+      btn.classList.remove('active');
+      btn.title = 'Current: 2-View Fit (Click for 3-View Fit)';
+      if (icon) icon.className = 'fa-solid fa-table-columns';
+    }
+  }
+
+  window.renderAll2D();
+  window.render3D();
 };
 
 window.toggleFullscreen = function(btn) {
@@ -580,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnNext) btnNext.addEventListener('click', () => window.nextCase());
 
   const btnHome = document.getElementById('btnBackHome');
-  if (btnHome) btnHome.addEventListener('click', () => window.showHome());
+  if (btnHome) btnHome.addEventListener('click', () => window.handleHomeClick());
 
   const btn2D = document.getElementById('btnMode2D');
   const btn3D = document.getElementById('btnMode3D');
@@ -646,3 +703,230 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ==========================================
+// 6. CONFIDENTIAL ADMIN CASE METADATA SYSTEM
+// ==========================================
+let homeClickCount = 0;
+let homeClickTimer = null;
+
+window.handleHomeClick = function() {
+  homeClickCount++;
+  clearTimeout(homeClickTimer);
+
+  if (homeClickCount >= 7) {
+    homeClickCount = 0;
+    window.openAdminModal();
+  } else {
+    homeClickTimer = setTimeout(() => {
+      homeClickCount = 0;
+    }, 2500); // 2.5 seconds window for 7 rapid clicks
+  }
+
+  window.showHome();
+};
+
+window.getAdminData = function() {
+  const saved = localStorage.getItem('acetaview_admin_cases');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {
+      console.error('Error parsing admin data:', e);
+    }
+  }
+  return window.CASES_DATA.map(c => ({
+    id: c.id,
+    title: c.title,
+    patientName: '',
+    hn: '',
+    diagnosis: ''
+  }));
+};
+
+window.openAdminModal = function() {
+  const modal = document.getElementById('adminModal');
+  if (!modal) return;
+  window.renderAdminCasesList();
+  modal.style.display = 'flex';
+};
+
+window.closeAdminModal = function() {
+  const modal = document.getElementById('adminModal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.renderAdminCasesList = function() {
+  const container = document.getElementById('adminCasesList');
+  if (!container) return;
+
+  const data = window.getAdminData();
+  container.innerHTML = '';
+
+  data.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.className = 'admin-case-item';
+    card.innerHTML = `
+      <div class="admin-case-tag">
+        <i class="fa-solid fa-folder-medical"></i> ${item.title || ('Case ' + String(index + 1).padStart(2, '0'))}
+      </div>
+      <div class="admin-input-group">
+        <label class="admin-input-label">ชื่อ - นามสกุล (Patient Name)</label>
+        <input type="text" class="admin-input" id="admin_name_${item.id}" value="${item.patientName || ''}">
+      </div>
+      <div class="admin-input-group">
+        <label class="admin-input-label">HN (Hospital No.)</label>
+        <input type="text" class="admin-input" id="admin_hn_${item.id}" value="${item.hn || ''}">
+      </div>
+      <div class="admin-input-group">
+        <label class="admin-input-label">Diag (การวินิจฉัยโรค)</label>
+        <input type="text" class="admin-input" id="admin_diag_${item.id}" value="${item.diagnosis || ''}">
+      </div>
+    `;
+    container.appendChild(card);
+  });
+};
+
+window.saveAdminData = function() {
+  const currentData = window.getAdminData();
+  const updatedData = currentData.map(item => {
+    const nameInput = document.getElementById(`admin_name_${item.id}`);
+    const hnInput = document.getElementById(`admin_hn_${item.id}`);
+    const diagInput = document.getElementById(`admin_diag_${item.id}`);
+
+    return {
+      id: item.id,
+      title: item.title,
+      patientName: nameInput ? nameInput.value.trim() : (item.patientName || ''),
+      hn: hnInput ? hnInput.value.trim() : (item.hn || ''),
+      diagnosis: diagInput ? diagInput.value.trim() : (item.diagnosis || '')
+    };
+  });
+
+  localStorage.setItem('acetaview_admin_cases', JSON.stringify(updatedData, null, 2));
+  window.showAdminToast('บันทึกข้อมูลลง Browser Storage สำเร็จแล้ว');
+};
+
+let _adminFileHandle = null;
+
+window.openLocalFile = async function() {
+  try {
+    if ('showOpenFilePicker' in window) {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{
+          description: 'JSON Files',
+          accept: { 'application/json': ['.json'] }
+        }],
+        multiple: false
+      });
+      _adminFileHandle = handle;
+      const file = await _adminFileHandle.getFile();
+      const contents = await file.text();
+      const parsed = JSON.parse(contents);
+      if (Array.isArray(parsed)) {
+        localStorage.setItem('acetaview_admin_cases', JSON.stringify(parsed, null, 2));
+        window.renderAdminCasesList();
+        window.showAdminToast(`โหลดข้อมูลจากไฟล์ "${file.name}" สำเร็จแล้ว`);
+      }
+    } else {
+      // Fallback for Safari / mobile: invisible file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,application/json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const parsed = JSON.parse(evt.target.result);
+            if (Array.isArray(parsed)) {
+              localStorage.setItem('acetaview_admin_cases', JSON.stringify(parsed, null, 2));
+              window.renderAdminCasesList();
+              window.showAdminToast(`โหลดข้อมูลจาก "${file.name}" สำเร็จแล้ว`);
+            }
+          } catch (err) {
+            alert('ไฟล์ JSON ไม่ถูกต้อง');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') console.error(e);
+  }
+};
+
+window.saveDirectlyToFile = async function() {
+  window.saveAdminData();
+  const data = window.getAdminData();
+  const jsonStr = JSON.stringify(data, null, 2);
+
+  try {
+    if ('showSaveFilePicker' in window) {
+      if (!_adminFileHandle) {
+        _adminFileHandle = await window.showSaveFilePicker({
+          suggestedName: 'cases_metadata.json',
+          types: [{
+            description: 'JSON Files',
+            accept: { 'application/json': ['.json'] }
+          }]
+        });
+      }
+      const writable = await _adminFileHandle.createWritable();
+      await writable.write(jsonStr);
+      await writable.close();
+      window.showAdminToast('✅ บันทึกลงไฟล์ในเครื่องเรียบร้อยแล้ว!');
+      return;
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    console.error('File System Access API error:', err);
+  }
+
+  // Fallback direct download if File System Access API is not supported in the current browser
+  window.downloadAdminDataJson(jsonStr);
+};
+
+window.exportAdminData = function() {
+  window.saveAdminData();
+  const data = window.getAdminData();
+  const jsonStr = JSON.stringify(data, null, 2);
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(jsonStr).then(() => {
+      window.showAdminToast('คัดลอก JSON Data ลง Clipboard แล้ว');
+    }).catch(() => {
+      window.downloadAdminDataJson(jsonStr);
+    });
+  } else {
+    window.downloadAdminDataJson(jsonStr);
+  }
+};
+
+window.downloadAdminDataJson = function(jsonStr) {
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cases_metadata.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  window.showAdminToast('ดาวน์โหลดไฟล์ cases_metadata.json เรียบร้อยแล้ว');
+};
+
+window.showAdminToast = function(msg) {
+  const toast = document.getElementById('adminToast');
+  const toastText = document.getElementById('adminToastText');
+  if (!toast) return;
+
+  if (toastText && msg) toastText.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+};
