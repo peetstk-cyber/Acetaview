@@ -7,14 +7,14 @@
 window.CASES_DATA = [
   { id: "case-01", caseNumber: 1, title: "Case 01", folder: "Case01", slices: { axial: 140, sagittal: 111, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
   { id: "case-02", caseNumber: 2, title: "Case 02", folder: "Case02", slices: { axial: 160, sagittal: 153, coronal: 148 }, views3d: { horizontal: 27, vertical: 26 } },
-  { id: "case-03", caseNumber: 3, title: "Case 03", folder: "Case03", slices: { axial: 110, sagittal: 95, coronal: 105 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-04", caseNumber: 4, title: "Case 04", folder: "Case04", slices: { axial: 105, sagittal: 90, coronal: 100 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-05", caseNumber: 5, title: "Case 05", folder: "Case05", slices: { axial: 130, sagittal: 110, coronal: 120 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-06", caseNumber: 6, title: "Case 06", folder: "Case06", slices: { axial: 125, sagittal: 105, coronal: 115 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-07", caseNumber: 7, title: "Case 07", folder: "Case07", slices: { axial: 135, sagittal: 112, coronal: 122 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-08", caseNumber: 8, title: "Case 08", folder: "Case08", slices: { axial: 118, sagittal: 98, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-09", caseNumber: 9, title: "Case 09", folder: "Case09", slices: { axial: 115, sagittal: 95, coronal: 105 }, views3d: { horizontal: 92, vertical: 108 } },
-  { id: "case-10", caseNumber: 10, title: "Case 10", folder: "Case10", slices: { axial: 145, sagittal: 120, coronal: 130 }, views3d: { horizontal: 92, vertical: 108 } }
+  { id: "case-03", caseNumber: 3, title: "Case 03", folder: "Case03", slices: { axial: 103, sagittal: 106, coronal: 99 }, views3d: { horizontal: 24, vertical: 27 } },
+  { id: "case-04", caseNumber: 4, title: "Case 04", folder: "Case04", slices: { axial: 101, sagittal: 98, coronal: 84 }, views3d: { horizontal: 32, vertical: 31 } },
+  { id: "case-05", caseNumber: 5, title: "Case 05", folder: "Case05", slices: { axial: 100, sagittal: 96, coronal: 100 }, views3d: { horizontal: 18, vertical: 26 } },
+  { id: "case-06", caseNumber: 6, title: "Case 06", folder: "Case06", slices: { axial: 140, sagittal: 111, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-07", caseNumber: 7, title: "Case 07", folder: "Case07", slices: { axial: 140, sagittal: 111, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-08", caseNumber: 8, title: "Case 08", folder: "Case08", slices: { axial: 140, sagittal: 111, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-09", caseNumber: 9, title: "Case 09", folder: "Case09", slices: { axial: 140, sagittal: 111, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } },
+  { id: "case-10", caseNumber: 10, title: "Case 10", folder: "Case10", slices: { axial: 140, sagittal: 111, coronal: 108 }, views3d: { horizontal: 92, vertical: 108 } }
 ];
 
 function getCandidateUrls(folderName, plane, i) {
@@ -352,6 +352,8 @@ class TouchController {
 let currentCaseObj = window.CASES_DATA[0];
 let slicesState = { axial: 1, sagittal: 1, coronal: 1 };
 let rot3DState = { horiz: 0, vert: 0 };
+let currentViewMode = 2; // 2 = 2-View Fit (default), 3 = 3-View Fit
+let slotPlanes = { 1: 'axial', 2: 'coronal', 3: 'sagittal' };
 
 // rAF handles — ensures canvas redraws sync with browser repaint cycle (60fps on iPad)
 window._raf2D = null;
@@ -369,15 +371,15 @@ window.updateSliderProgress = function(sliderId) {
 };
 
 window.updateSliderLimits = function(plane, maxCount) {
-  let slider = null;
-  if (plane === 'axial') slider = document.getElementById('sliderAxial');
-  if (plane === 'sagittal') slider = document.getElementById('sliderSagittal');
-  if (plane === 'coronal') slider = document.getElementById('sliderCoronal');
-
-  if (slider && maxCount > 0) {
-    slider.max = maxCount;
-    if (slicesState[plane] > maxCount) slicesState[plane] = maxCount;
-  }
+  [1, 2, 3].forEach(slotNum => {
+    if (slotPlanes[slotNum] === plane) {
+      const slider = document.getElementById(`sliderSlot${slotNum}`);
+      if (slider && maxCount > 0) {
+        slider.max = maxCount;
+        if (slicesState[plane] > maxCount) slicesState[plane] = maxCount;
+      }
+    }
+  });
   // Debounce: slider limit updates can fire rapidly during batch load — coalesce into 1 render
   clearTimeout(window._sliderDebounce);
   window._sliderDebounce = setTimeout(() => window.renderAll2D(), 16);
@@ -417,13 +419,15 @@ window.openCase = function(caseId) {
   slicesState.sagittal = 1;
   slicesState.coronal = 1;
 
-  const sliderAxial = document.getElementById('sliderAxial');
-  const sliderSagittal = document.getElementById('sliderSagittal');
-  const sliderCoronal = document.getElementById('sliderCoronal');
-
-  if (sliderAxial) { sliderAxial.max = currentCaseObj.slices.axial; sliderAxial.value = 1; }
-  if (sliderSagittal) { sliderSagittal.max = currentCaseObj.slices.sagittal; sliderSagittal.value = 1; }
-  if (sliderCoronal) { sliderCoronal.max = currentCaseObj.slices.coronal; sliderCoronal.value = 1; }
+  [1, 2, 3].forEach(slotNum => {
+    const plane = slotPlanes[slotNum];
+    const slider = document.getElementById(`sliderSlot${slotNum}`);
+    const count = currentCaseObj.slices[plane] || 100;
+    if (slider) {
+      slider.max = count;
+      slider.value = 1;
+    }
+  });
 
   rot3DState.horiz = 0;
   rot3DState.vert = 0;
@@ -481,24 +485,56 @@ window.switchMode = function(mode) {
   }
 };
 
-let currentViewFit = 2; // 2 = Fit 2 views (default), 3 = Fit 3 views
+window.setSlotPlane = function(slotNum, plane, shouldRender = true) {
+  slotPlanes[slotNum] = plane;
+
+  const slotEl = document.getElementById(`viewportSlot${slotNum}`);
+  if (slotEl) {
+    const buttons = slotEl.querySelectorAll('.btn-plane-toggle');
+    buttons.forEach(btn => {
+      if (btn.dataset.plane === plane) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_${plane}`] || (currentCaseObj.slices ? currentCaseObj.slices[plane] : 100);
+  const slider = document.getElementById(`sliderSlot${slotNum}`);
+  if (slider) {
+    slider.max = count;
+    slider.value = slicesState[plane] || 1;
+  }
+
+  if (shouldRender) {
+    window.renderAll2D();
+  }
+};
 
 window.toggleViewOption = function() {
-  currentViewFit = (currentViewFit === 2) ? 3 : 2;
+  currentViewMode = (currentViewMode === 2) ? 3 : 2;
   const layout2D = document.getElementById('layout2D');
   const btn = document.getElementById('btnViewOption');
 
   if (layout2D) {
-    if (currentViewFit === 3) {
-      layout2D.classList.add('fit-3');
+    if (currentViewMode === 3) {
+      layout2D.classList.remove('mode-2view');
+      layout2D.classList.add('mode-3view');
+      window.setSlotPlane(1, 'axial', false);
+      window.setSlotPlane(2, 'coronal', false);
+      window.setSlotPlane(3, 'sagittal', false);
     } else {
-      layout2D.classList.remove('fit-3');
+      layout2D.classList.remove('mode-3view');
+      layout2D.classList.add('mode-2view');
+      window.setSlotPlane(1, 'axial', false);
+      window.setSlotPlane(2, 'coronal', false);
     }
   }
 
   if (btn) {
     const icon = btn.querySelector('i');
-    if (currentViewFit === 3) {
+    if (currentViewMode === 3) {
       btn.classList.add('active');
       btn.title = 'Current: 3-View Fit (Click for 2-View Fit)';
       if (icon) icon.className = 'fa-solid fa-table-cells';
@@ -557,33 +593,29 @@ document.addEventListener('keydown', (e) => {
 window.renderAll2D = function() {
   cancelAnimationFrame(window._raf2D);
   window._raf2D = requestAnimationFrame(() => {
-    const canvasAxial = document.getElementById('canvasAxial');
-    const canvasSagittal = document.getElementById('canvasSagittal');
-    const canvasCoronal = document.getElementById('canvasCoronal');
+    const activeSlots = (currentViewMode === 3) ? [1, 2, 3] : [1, 2];
+    activeSlots.forEach(slotNum => {
+      const canvas = document.getElementById(`canvasSlot${slotNum}`);
+      if (!canvas) return;
 
-    window.resizeCanvas(canvasAxial);
-    window.resizeCanvas(canvasSagittal);
-    window.resizeCanvas(canvasCoronal);
+      window.resizeCanvas(canvas);
+      const ctx = canvas.getContext('2d');
+      const plane = slotPlanes[slotNum] || (slotNum === 1 ? 'axial' : slotNum === 2 ? 'coronal' : 'sagittal');
+      const sliceIdx = slicesState[plane] || 1;
+      const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_${plane}`] || (currentCaseObj.slices ? currentCaseObj.slices[plane] : 100);
 
-    const ctxAxial = canvasAxial.getContext('2d');
-    const ctxSag = canvasSagittal.getContext('2d');
-    const ctxCor = canvasCoronal.getContext('2d');
+      window.imageSequenceManager.drawFrame(ctx, currentCaseObj.folder, plane, sliceIdx, canvas.width, canvas.height);
 
-    window.imageSequenceManager.drawFrame(ctxAxial, currentCaseObj.folder, 'axial', slicesState.axial, canvasAxial.width, canvasAxial.height);
-    window.imageSequenceManager.drawFrame(ctxSag, currentCaseObj.folder, 'sagittal', slicesState.sagittal, canvasSagittal.width, canvasSagittal.height);
-    window.imageSequenceManager.drawFrame(ctxCor, currentCaseObj.folder, 'coronal', slicesState.coronal, canvasCoronal.width, canvasCoronal.height);
+      const badge = document.getElementById(`badgeSlot${slotNum}`);
+      if (badge) badge.textContent = `${sliceIdx}/${count}`;
 
-    const countAxial = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_axial`] || currentCaseObj.slices.axial;
-    const countSag = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_sagittal`] || currentCaseObj.slices.sagittal;
-    const countCor = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_coronal`] || currentCaseObj.slices.coronal;
-
-    document.getElementById('badgeAxial').textContent = `${slicesState.axial}/${countAxial}`;
-    document.getElementById('badgeSagittal').textContent = `${slicesState.sagittal}/${countSag}`;
-    document.getElementById('badgeCoronal').textContent = `${slicesState.coronal}/${countCor}`;
-
-    window.updateSliderProgress('sliderAxial');
-    window.updateSliderProgress('sliderSagittal');
-    window.updateSliderProgress('sliderCoronal');
+      const slider = document.getElementById(`sliderSlot${slotNum}`);
+      if (slider) {
+        slider.max = count;
+        slider.value = sliceIdx;
+      }
+      window.updateSliderProgress(`sliderSlot${slotNum}`);
+    });
   });
 };
 
@@ -644,38 +676,50 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btn2D) btn2D.addEventListener('click', () => window.switchMode('2d'));
   if (btn3D) btn3D.addEventListener('click', () => window.switchMode('3d'));
 
-  // Sliders
-  const sliderAxial = document.getElementById('sliderAxial');
-  const sliderSagittal = document.getElementById('sliderSagittal');
-  const sliderCoronal = document.getElementById('sliderCoronal');
+  // Sliders for 2D Slots 1, 2, 3
+  const sliderSlot1 = document.getElementById('sliderSlot1');
+  const sliderSlot2 = document.getElementById('sliderSlot2');
+  const sliderSlot3 = document.getElementById('sliderSlot3');
   const slider3DH = document.getElementById('slider3DHoriz');
   const slider3DV = document.getElementById('slider3DVert');
 
-  if (sliderAxial) sliderAxial.addEventListener('input', (e) => { slicesState.axial = parseInt(e.target.value); window.renderAll2D(); });
-  if (sliderSagittal) sliderSagittal.addEventListener('input', (e) => { slicesState.sagittal = parseInt(e.target.value); window.renderAll2D(); });
-  if (sliderCoronal) sliderCoronal.addEventListener('input', (e) => { slicesState.coronal = parseInt(e.target.value); window.renderAll2D(); });
+  if (sliderSlot1) sliderSlot1.addEventListener('input', (e) => {
+    const plane = slotPlanes[1];
+    slicesState[plane] = parseInt(e.target.value);
+    window.renderAll2D();
+  });
+  if (sliderSlot2) sliderSlot2.addEventListener('input', (e) => {
+    const plane = slotPlanes[2];
+    slicesState[plane] = parseInt(e.target.value);
+    window.renderAll2D();
+  });
+  if (sliderSlot3) sliderSlot3.addEventListener('input', (e) => {
+    const plane = slotPlanes[3];
+    slicesState[plane] = parseInt(e.target.value);
+    window.renderAll2D();
+  });
   if (slider3DH) slider3DH.addEventListener('input', (e) => { rot3DState.horiz = parseInt(e.target.value); window.render3D(); });
   if (slider3DV) slider3DV.addEventListener('input', (e) => { rot3DState.vert = parseInt(e.target.value); window.render3D(); });
 
-  // Touch Scrubbing synchronized with exact frame count for 3D
-  TouchController.bindScrub(document.getElementById('canvasAxial'), (step) => {
-    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_axial`] || currentCaseObj.slices.axial;
-    slicesState.axial = Math.max(1, Math.min(count, slicesState.axial - step));
-    document.getElementById('sliderAxial').value = slicesState.axial;
+  // Touch Scrubbing for 2D Slots 1, 2, 3
+  TouchController.bindScrub(document.getElementById('canvasSlot1'), (step) => {
+    const plane = slotPlanes[1];
+    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_${plane}`] || currentCaseObj.slices[plane];
+    slicesState[plane] = Math.max(1, Math.min(count, slicesState[plane] - step));
     window.renderAll2D();
   });
 
-  TouchController.bindScrub(document.getElementById('canvasSagittal'), (step) => {
-    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_sagittal`] || currentCaseObj.slices.sagittal;
-    slicesState.sagittal = Math.max(1, Math.min(count, slicesState.sagittal - step));
-    document.getElementById('sliderSagittal').value = slicesState.sagittal;
+  TouchController.bindScrub(document.getElementById('canvasSlot2'), (step) => {
+    const plane = slotPlanes[2];
+    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_${plane}`] || currentCaseObj.slices[plane];
+    slicesState[plane] = Math.max(1, Math.min(count, slicesState[plane] - step));
     window.renderAll2D();
   });
 
-  TouchController.bindScrub(document.getElementById('canvasCoronal'), (step) => {
-    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_coronal`] || currentCaseObj.slices.coronal;
-    slicesState.coronal = Math.max(1, Math.min(count, slicesState.coronal - step));
-    document.getElementById('sliderCoronal').value = slicesState.coronal;
+  TouchController.bindScrub(document.getElementById('canvasSlot3'), (step) => {
+    const plane = slotPlanes[3];
+    const count = window.imageSequenceManager.detectedCounts[`${currentCaseObj.folder}_${plane}`] || currentCaseObj.slices[plane];
+    slicesState[plane] = Math.max(1, Math.min(count, slicesState[plane] - step));
     window.renderAll2D();
   });
 

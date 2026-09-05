@@ -154,72 +154,75 @@
       <!-- Viewer Workspace -->
       <div class="viewer-workspace">
         
-        <!-- 2D Viewport Grid (Axial, Sagittal, Coronal) -->
-        <div id="layout2D" class="view-2d-layout">
+        <!-- 2D Viewport Grid (2-View or 3-View Fit) -->
+        <div id="layout2D" class="view-2d-layout mode-2view">
           
-          <!-- Axial Viewport -->
-          <div class="viewport-box">
+          <!-- Viewport Slot 1 (Left - Default: Axial) -->
+          <div class="viewport-box" id="viewportSlot1">
             <div class="viewport-header">
-              <div class="viewport-title">
-                <i class="fa-solid fa-circle-dot"></i>
-                <span>AXIAL VIEW</span>
+              <div class="plane-selector-group">
+                <button class="btn-plane-toggle active" data-plane="axial" onclick="setSlotPlane(1, 'axial');">Axial</button>
+                <button class="btn-plane-toggle" data-plane="sagittal" onclick="setSlotPlane(1, 'sagittal');">Sagittal</button>
+                <button class="btn-plane-toggle" data-plane="coronal" onclick="setSlotPlane(1, 'coronal');">Coronal</button>
               </div>
               <div class="viewport-header-actions">
-                <span id="badgeAxial" class="slice-badge">0/0</span>
+                <span id="badgeSlot1" class="slice-badge">0/0</span>
                 <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
                   <i class="fa-solid fa-expand"></i>
                 </button>
               </div>
             </div>
             <div class="viewport-canvas-container">
-              <canvas id="canvasAxial" class="ct-canvas"></canvas>
+              <canvas id="canvasSlot1" class="ct-canvas"></canvas>
             </div>
             <div class="viewport-controls">
-              <input type="range" id="sliderAxial" class="slice-slider" min="1" max="100" value="1">
+              <input type="range" id="sliderSlot1" class="slice-slider" min="1" max="100" value="1">
             </div>
           </div>
 
-          <!-- Sagittal Viewport -->
-          <div class="viewport-box">
+          <!-- Viewport Slot 2 (Middle/Right - Default: Coronal) -->
+          <div class="viewport-box" id="viewportSlot2">
             <div class="viewport-header">
-              <div class="viewport-title">
-                <i class="fa-solid fa-circle-dot"></i>
-                <span>SAGITTAL VIEW</span>
+              <div class="plane-selector-group">
+                <button class="btn-plane-toggle" data-plane="axial" onclick="setSlotPlane(2, 'axial');">Axial</button>
+                <button class="btn-plane-toggle" data-plane="sagittal" onclick="setSlotPlane(2, 'sagittal');">Sagittal</button>
+                <button class="btn-plane-toggle active" data-plane="coronal" onclick="setSlotPlane(2, 'coronal');">Coronal</button>
               </div>
               <div class="viewport-header-actions">
-                <span id="badgeSagittal" class="slice-badge">0/0</span>
+                <span id="badgeSlot2" class="slice-badge">0/0</span>
                 <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
                   <i class="fa-solid fa-expand"></i>
                 </button>
               </div>
             </div>
             <div class="viewport-canvas-container">
-              <canvas id="canvasSagittal" class="ct-canvas"></canvas>
+              <canvas id="canvasSlot2" class="ct-canvas"></canvas>
             </div>
             <div class="viewport-controls">
-              <input type="range" id="sliderSagittal" class="slice-slider" min="1" max="100" value="1">
+              <input type="range" id="sliderSlot2" class="slice-slider" min="1" max="100" value="1">
             </div>
           </div>
 
-          <!-- Coronal Viewport -->
-          <div class="viewport-box">
+          <!-- Viewport Slot 3 (Right - Default: Sagittal in 3-View mode) -->
+          <div class="viewport-box" id="viewportSlot3">
             <div class="viewport-header">
-              <div class="viewport-title">
-                <i class="fa-solid fa-circle-dot"></i>
-                <span>CORONAL VIEW</span>
+              <div class="plane-selector-group">
+                <button class="btn-plane-toggle" data-plane="axial" onclick="setSlotPlane(3, 'axial');">Axial</button>
+                <button class="btn-plane-toggle active" data-plane="sagittal" onclick="setSlotPlane(3, 'sagittal');">Sagittal</button>
+                <button class="btn-plane-toggle" data-plane="coronal" onclick="setSlotPlane(3, 'coronal');">Coronal</button>
               </div>
               <div class="viewport-header-actions">
-                <span id="badgeCoronal" class="slice-badge">0/0</span>
+                <span id="badgeSlot3" class="slice-badge">0/0</span>
                 <button class="btn-fullscreen" title="Toggle Fullscreen" onclick="toggleFullscreen(this);">
                   <i class="fa-solid fa-expand"></i>
                 </button>
               </div>
             </div>
             <div class="viewport-canvas-container">
-              <canvas id="canvasCoronal" class="ct-canvas"></canvas>
+              <canvas id="canvasSlot3" class="ct-canvas"></canvas>
             </div>
             <div class="viewport-controls">
-              <input type="range" id="sliderCoronal" class="slice-slider" min="1" max="100" value="1">
+              <input type="range" id="sliderSlot3" class="slice-slider" min="1" max="100" value="1">
             </div>
           </div>
 

@@ -1,4 +1,15 @@
+# macOS
 .DS_Store
-*/.DS_Store
-*/*/.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 scratch/
+
+# Cloudflare / Wrangler
+.wrangler/
+.mf/
